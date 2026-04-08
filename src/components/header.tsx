@@ -11,11 +11,11 @@ export function Header() {
 			contentClassName="flex items-center justify-between px-4 sm:px-6 h-14"
 			midRightClassName="border-l border-border"
 			rightClassName="border-l border-border"
-		>
-			<span className="text-sm font-medium tracking-tight text-foreground">
-				lthieu.dev
-			</span>
-			<ThemeSwitch />
-		</PageFrame>
+			>
+				<span className="font-mono text-sm font-medium tracking-tight text-foreground">
+					lthieu.dev
+				</span>
+				<ThemeSwitch />
+			</PageFrame>
 	);
 }

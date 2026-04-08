@@ -42,6 +42,7 @@ function VerticalLine({
 			>
 				{segments.map((seg, i) => (
 					<div
+						// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 						key={i}
 						style={{
 							flex: seg.flex,
@@ -88,11 +89,28 @@ const RIGHT_SEGMENTS: Segment[] = [
 	{ flex: 3.34, solid: false },
 ];
 
+const OUTER_LEFT_TOP_DIAMOND =
+	"-top-[0.5px] right-[0.5px] translate-x-1/2 -translate-y-1/2";
+const OUTER_LEFT_BOTTOM_DIAMOND =
+	"-bottom-[0.5px] right-[0.5px] translate-x-1/2 translate-y-1/2";
+const OUTER_RIGHT_TOP_DIAMOND =
+	"-top-[0.5px] left-[0.5px] -translate-x-1/2 -translate-y-1/2";
+const OUTER_RIGHT_BOTTOM_DIAMOND =
+	"-bottom-[0.5px] left-[0.5px] -translate-x-1/2 translate-y-1/2";
+const INNER_LEFT_TOP_DIAMOND =
+	"-top-[0.5px] -left-[0.5px] hidden -translate-x-1/2 -translate-y-1/2 md:block";
+const INNER_RIGHT_TOP_DIAMOND =
+	"-top-[0.5px] -right-[0.5px] hidden translate-x-1/2 -translate-y-1/2 md:block";
+const INNER_LEFT_BOTTOM_DIAMOND =
+	"-bottom-[0.5px] -left-[0.5px] hidden -translate-x-1/2 translate-y-1/2 md:block";
+const INNER_RIGHT_BOTTOM_DIAMOND =
+	"-bottom-[0.5px] -right-[0.5px] hidden translate-x-1/2 translate-y-1/2 md:block";
+
 // ── Section ───────────────────────────────────────────────────────────────────
 
 export function Section({
 	children,
-	minHeight = "450px",
+	minHeight,
 	className = "",
 }: {
 	children: ReactNode;
@@ -103,36 +121,32 @@ export function Section({
 		<PageFrame
 			as="section"
 			className={className}
-			style={{ minHeight }}
+			style={minHeight ? { minHeight } : undefined}
 			// Outer corner diamonds are inside each margin column, centered on their edge
 			leftSlot={
 				<>
 					<VerticalLine segments={LEFT_SEGMENTS} edge="right" />
 					{/* top-left & bottom-left outer diamonds */}
-					<Diamond className="absolute -top-[3px] -right-[2.5px]" />
-					<Diamond className="absolute -bottom-[3px] -right-[2.5px]" />
+					<Diamond className={OUTER_LEFT_TOP_DIAMOND} />
+					<Diamond className={OUTER_LEFT_BOTTOM_DIAMOND} />
 				</>
 			}
-			midLeftSlot={
-				<VerticalLine segments={MID_LEFT_SEGMENTS} edge="right" />
-			}
-			midRightSlot={
-				<VerticalLine segments={MID_RIGHT_SEGMENTS} edge="left" />
-			}
+			midLeftSlot={<VerticalLine segments={MID_LEFT_SEGMENTS} edge="right" />}
+			midRightSlot={<VerticalLine segments={MID_RIGHT_SEGMENTS} edge="left" />}
 			rightSlot={
 				<>
 					<VerticalLine segments={RIGHT_SEGMENTS} edge="left" />
 					{/* top-right & bottom-right outer diamonds */}
-					<Diamond className="absolute -top-[3px] -left-[2.5px]" />
-					<Diamond className="absolute -bottom-[3px] -left-[2.5px]" />
+					<Diamond className={OUTER_RIGHT_TOP_DIAMOND} />
+					<Diamond className={OUTER_RIGHT_BOTTOM_DIAMOND} />
 				</>
 			}
 		>
 			{/* Inner diamonds at content column edges (md+) */}
-			<Diamond className="absolute -top-[3px] -left-[3.5px] hidden md:block" />
-			<Diamond className="absolute -top-[3px] -right-[3.5px] hidden md:block" />
-			<Diamond className="absolute -bottom-[3px] -left-[3.5px] hidden md:block" />
-			<Diamond className="absolute -bottom-[3px] -right-[3.5px] hidden md:block" />
+			<Diamond className={INNER_LEFT_TOP_DIAMOND} />
+			<Diamond className={INNER_RIGHT_TOP_DIAMOND} />
+			<Diamond className={INNER_LEFT_BOTTOM_DIAMOND} />
+			<Diamond className={INNER_RIGHT_BOTTOM_DIAMOND} />
 
 			{children}
 		</PageFrame>

@@ -32,10 +32,7 @@ export default function RootLayout({
 			suppressHydrationWarning
 		>
 			<body className="relative min-h-full flex flex-col">
-				<ThemeProvider
-					attribute="class"
-					defaultTheme="light"
-				>
+				<ThemeProvider attribute="class" defaultTheme="light">
 					<Noise className="fixed" />
 					<Header />
 					<div className="flex flex-1 flex-col">{children}</div>
