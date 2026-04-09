@@ -7,7 +7,7 @@ export default function Home() {
 	return (
 		<>
 			<Section>
-				<div className="grid grid-cols-[150px_minmax(0,1fr)] content-start items-start gap-4">
+				<div className="grid grid-cols-[150px_minmax(0,1fr)] content-start items-start">
 					<AvatarCard />
 
 					<div className="default-border-text-color flex min-h-full w-full flex-col justify-end border-l border-current pl-3 pt-1">

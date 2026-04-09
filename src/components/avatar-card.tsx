@@ -110,7 +110,7 @@ export function AvatarCard() {
 
 			<div
 				ref={cardRef}
-				className="relative aspect-[4/5] overflow-hidden rounded-sm border border-black/8 bg-[#ecebe7] shadow-[0_24px_80px_rgba(15,15,15,0.12)] dark:border-white/8 dark:bg-[#1c1c1a] dark:shadow-[0_24px_80px_rgba(0,0,0,0.42)]"
+				className="relative aspect-[4/5] overflow-hidden rounded-sm border border-black/8 bg-[#ecebe7] shadow-[0_24px_80px_rgba(15,15,15,0.12)] dark:border-white/8 dark:bg-[#1c1c1a]"
 				style={{ cursor: canvasConfig ? "none" : undefined }}
 				onMouseEnter={handleMouseEnter}
 				onMouseMove={handleMouseMove}
@@ -137,7 +137,6 @@ export function AvatarCard() {
 						className="scale-[1.3] object-contain object-bottom contrast-110"
 					/>
 				</div>
-				<div className="absolute inset-x-[6%] bottom-[2%] h-[16%] rounded-full bg-black/18 blur-[30px] dark:bg-black/38" />
 				<div className="absolute inset-x-[8%] bottom-[6%] h-[18%] rounded-full bg-black/28 blur-3xl dark:bg-black/50" />
 				<div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/10 via-black/5 to-transparent dark:from-black/28 dark:via-black/10" />
 
@@ -174,7 +173,7 @@ export function AvatarCard() {
 									type="holes"
 									grid="square"
 									inverted={true}
-									size={0.79}
+									size={0.7}
 									radius={1}
 									contrast={1}
 									grainMixer={0.19}

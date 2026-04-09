@@ -1,6 +1,6 @@
 "use client";
 
-import { GrainGradient, PaperTexture, Warp } from "@paper-design/shaders-react";
+import { Dithering, PaperTexture } from "@paper-design/shaders-react";
 
 export function AvatarShader() {
 	return (
@@ -12,83 +12,67 @@ export function AvatarShader() {
 				height: "100%",
 				pointerEvents: "none",
 			}}
-			className="overflow-hidden bg-[#f7f8fc] dark:border-white/8 dark:bg-[#12151d]"
+			className="overflow-hidden bg-[#f7f8fc] dark:bg-[#12151d]"
 		>
 			<div className="absolute inset-0 dark:hidden">
-				<Warp
+				<Dithering
 					style={{
 						position: "absolute",
 						inset: 0,
 						width: "100%",
 						height: "100%",
 					}}
-					// colors={["#f8fbff", "#eef2ff", "#f8fbff", "#eef2ff"]}
-					colors={["#f8fbff", "#dbe4ff", "#eef2ff", "#cfd8f3"]}
-					proportion={0.2}
-					softness={0.5}
-					distortion={0.01}
-					swirl={0.6}
-					swirlIterations={6}
-					shapeScale={0.6}
-					speed={13}
+					colorBack="#f7f9ff"
+					colorFront="#cfd8f3"
+					shape="warp"
+					type="4x4"
+					speed={1.3}
 					scale={0.3}
+					size={0.7}
 				/>
 
-				<GrainGradient
+				<PaperTexture
 					style={{
 						position: "absolute",
 						inset: 0,
 						width: "100%",
 						height: "100%",
-						opacity: 0.25,
+						opacity: 0.14,
 					}}
 					speed={0}
-					scale={10}
-					colorBack="#f7f9ff"
-					colors={["#f8fbff"]}
-					softness={0.4}
-					intensity={1}
-					noise={1}
-					shape="wave"
+					scale={1}
+					colorFront="#d7e1fb"
+					colorBack="#ffffff"
+					contrast={0.1}
+					roughness={0.42}
+					fiber={0.18}
+					fiberSize={0.16}
+					crumples={0.08}
+					crumpleSize={0.22}
+					folds={0.04}
+					foldCount={3}
+					drops={0}
+					fade={0}
+					seed={3.2}
 				/>
 			</div>
 
 			<div className="absolute inset-0 hidden dark:block">
-				<Warp
+				<Dithering
 					style={{
 						position: "absolute",
 						inset: 0,
 						width: "100%",
 						height: "100%",
-						opacity: 0.5,
+						opacity: 0.58,
 					}}
-					colors={["#0f1320", "#18284f", "#101623", "#1a2441"]}
-					proportion={0.2}
-					softness={0.5}
-					distortion={0.01}
-					swirl={0.6}
-					swirlIterations={6}
-					shapeScale={0.6}
-					speed={13}
+					colorBack="#10131A"
+					colorFront="#141C2F"
+					shape="warp"
+					type="4x4"
+					speed={1.3}
 					scale={0.3}
-				/>
-
-				<GrainGradient
-					style={{
-						position: "absolute",
-						inset: 0,
-						width: "100%",
-						height: "100%",
-						opacity: 0.13,
-					}}
-					speed={0}
-					scale={0.76}
-					colorBack="#0f1219"
-					colors={["#24386b", "#1b2b53", "#2b437f"]}
-					softness={0.55}
-					intensity={0.62}
-					noise={1}
-					shape="wave"
+					size={0.7}
 				/>
 			</div>
 		</div>
