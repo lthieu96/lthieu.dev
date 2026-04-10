@@ -89,6 +89,7 @@
   --color-foreground-muted: var(--foreground-muted);
   --color-border: var(--border);
   --font-sans: var(--font-geist-mono);
+  --font-serif: var(--font-lora);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);

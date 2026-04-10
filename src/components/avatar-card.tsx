@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AvatarShader } from '@/components/avatar-shader'
+import { useTheme } from 'next-themes'
 
 const DEBUG_LENS = false
 const LENS = 76
@@ -64,6 +65,8 @@ export function AvatarCard() {
   const cardRef = useRef<HTMLDivElement>(null)
   const lensRef = useRef<HTMLDivElement>(null)
   const halftoneWrapRef = useRef<HTMLDivElement>(null)
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
 
   const lensVisible = DEBUG_LENS || canvasConfig !== null
 
@@ -205,7 +208,7 @@ export function AvatarCard() {
                   scale={IMAGE_SCALE}
                   originY={1}
                   colorBack="#141414"
-                  colorFront="#1247d9"
+                  colorFront={isDark ? '#8ec5ff' : '#cfd8f3'}
                   originalColors={false}
                   type="holes"
                   grid="square"
