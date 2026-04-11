@@ -6,7 +6,7 @@ export function PageLoader() {
   const [progress, setProgress] = useState(0)
   const [hiding, setHiding] = useState(false)
   const [hidden, setHidden] = useState(false)
-  const rafRef = useRef<number>(null)
+  const rafRef = useRef<number | null>(null)
 
   useEffect(() => {
     const startTime = Date.now()

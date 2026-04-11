@@ -5,13 +5,18 @@ export function Footer() {
     <footer
       aria-hidden="true"
       className={[
-        'fixed bottom-0 left-0 right-0 z-0 overflow-hidden bg-background text-foreground select-none',
+        'fixed bottom-0 left-0 right-0 z-0 overflow-hidden bg-background select-none',
         'h-[150px] sm:h-[210px] lg:h-[300px]',
         '[--footer-svg-h:170px] [--footer-svg-bottom:-20px] [--footer-blur-h:36px]',
         'sm:[--footer-svg-h:220px] sm:[--footer-svg-bottom:-35px] sm:[--footer-blur-h:44px]',
         'lg:[--footer-svg-h:330px] lg:[--footer-svg-bottom:-50px] lg:[--footer-blur-h:56px]',
       ].join(' ')}
     >
+      {/* Shader as regular HTML element covering full footer */}
+      <div className="absolute inset-0">
+        <ShaderBackground />
+      </div>
+
       <svg
         viewBox="0 0 1000 300"
         preserveAspectRatio="xMidYMax meet"
@@ -19,11 +24,15 @@ export function Footer() {
         style={{
           bottom: 'var(--footer-svg-bottom)',
           height: 'var(--footer-svg-h)',
+          overflow: 'visible',
         }}
         aria-hidden="true"
       >
         <defs>
-          <clipPath id="footer-text-clip">
+          {/* Mask: white=show background, black=show shader through */}
+          <mask id="footer-bg-mask">
+            {/* Cover far beyond viewBox so overflow:visible areas are also masked */}
+            <rect x="-2000" y="-500" width="5000" height="1500" fill="white" />
             <text
               x="0"
               y="278"
@@ -32,19 +41,16 @@ export function Footer() {
               fontWeight="800"
               textLength="1000"
               lengthAdjust="spacingAndGlyphs"
+              fill="black"
               style={{ fontFamily: 'Gloock, serif' }}
             >
               HieuLe
             </text>
-          </clipPath>
+          </mask>
         </defs>
 
-        {/* Shader visible only inside text glyphs */}
-        <foreignObject x="0" y="0" width="1000" height="300" clipPath="url(#footer-text-clip)">
-          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-            <ShaderBackground />
-          </div>
-        </foreignObject>
+        {/* Rect covering entire footer (incl. overflow areas), text-shaped holes reveal shader */}
+        <rect x="-2000" y="-500" width="5000" height="1500" fill="var(--background)" mask="url(#footer-bg-mask)" />
 
         {/* Stroke outline on top */}
         <text
