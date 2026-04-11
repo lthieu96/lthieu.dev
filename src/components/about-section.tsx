@@ -1,6 +1,6 @@
 'use client'
 
-import { BarChart07, Briefcase01, LayersTwo01, Zap } from '@untitledui/icons'
+import { Briefcase01, Database01, LayoutGrid01, Users03 } from '@untitledui/icons'
 import { Section } from '@/components/section'
 
 const highlights = [
@@ -11,19 +11,19 @@ const highlights = [
       'Building and maintaining full-stack products, from user-facing apps to internal tooling.',
   },
   {
-    icon: Zap,
+    icon: Users03,
     label: '200k+ users',
     detail:
       'Part of the team building Cerebro, supporting 7k+ daily active users with real-time crypto data.',
   },
   {
-    icon: LayersTwo01,
+    icon: LayoutGrid01,
     label: 'Multi-platform support',
     detail:
       'Helping deliver dashboards, CMS foundations, and mobile/tablet applications for diverse needs.',
   },
   {
-    icon: BarChart07,
+    icon: Database01,
     label: 'Reliable operations',
     detail:
       'Built ERP-style systems to help digitize workflows for 3,800+ customers and 200 technicians.',

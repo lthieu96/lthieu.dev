@@ -147,6 +147,7 @@ export function ExperiencePositionItem({ position }: ExperiencePositionItemProps
   const hasEmploymentPeriod = Boolean(start)
   const isOngoing = hasEmploymentPeriod && !end
   const duration = hasEmploymentPeriod && start ? formatDuration(start, end) : ''
+  const hasMeta = Boolean(position.employmentType || hasEmploymentPeriod || duration)
 
   return (
     <Collapsible
@@ -159,11 +160,11 @@ export function ExperiencePositionItem({ position }: ExperiencePositionItemProps
         <CollapsibleTrigger
           className={cn(
             'group/experience-position not-prose block w-full text-left select-none data-[disabled=false]:cursor-pointer',
-            'relative before:absolute before:-top-1 before:-right-1 before:-bottom-1.5 before:left-7 before:rounded-lg before:bg-transparent before:opacity-0 before:transition-[background-color,opacity] before:duration-200 before:ease-out hover:before:opacity-100 hover:before:bg-black/[0.035] dark:hover:before:bg-white/[0.04]',
+            'relative before:absolute before:-top-1 before:-right-1 before:-bottom-1 before:left-7 before:rounded-lg before:bg-transparent before:opacity-0 before:transition-[background-color,opacity] before:duration-200 before:ease-out hover:before:opacity-100 hover:before:bg-black/[0.035] dark:hover:before:bg-white/[0.04]',
             'data-disabled:before:content-none',
           )}
         >
-          <div className="relative z-1 mb-1 flex items-center gap-3">
+          <div className={cn('relative z-1 flex items-center gap-3', hasMeta && 'mb-0')}>
             <div
               className={cn(
                 'flex size-6 shrink-0 items-center justify-center rounded-md',
@@ -184,7 +185,7 @@ export function ExperiencePositionItem({ position }: ExperiencePositionItemProps
             </div>
           </div>
 
-          {(position.employmentType || hasEmploymentPeriod || duration) && (
+          {hasMeta && (
             <div className="relative z-1 flex flex-wrap items-center gap-x-2 gap-y-1 pl-9 font-mono text-xs text-muted-foreground sm:text-sm">
               {position.employmentType && (
                 <>
@@ -250,7 +251,7 @@ export function ExperiencePositionItem({ position }: ExperiencePositionItemProps
         </CollapsibleContent>
 
         {Array.isArray(position.skills) && position.skills.length > 0 && (
-          <ul className="not-prose flex flex-wrap gap-1.5 pt-3 pl-9">
+          <ul className={cn('not-prose flex flex-wrap gap-1.5 pl-9', hasMeta ? 'pt-3' : 'pt-2')}>
             {position.skills.map((skill, index) => (
               <li key={index} className="flex">
                 <Skill>{skill}</Skill>

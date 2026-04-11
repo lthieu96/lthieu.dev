@@ -1,6 +1,16 @@
 'use client'
 
-import { Code02, LayersTwo01, Monitor01 } from '@untitledui/icons'
+import {
+  BarLineChart,
+  Code02,
+  CodeSquare01,
+  Compass,
+  Cryptocurrency01,
+  CurrencyEthereum,
+  LayoutAlt02,
+  PenTool02,
+  Server03,
+} from '@untitledui/icons'
 import { Section } from '@/components/section'
 import {
   type ExperienceItemType,
@@ -22,7 +32,7 @@ const experiences: ExperienceItemType[] = [
         employmentPeriod: {
           start: '01.2025',
         },
-        icon: <Code02 strokeWidth={1.8} />,
+        icon: <CurrencyEthereum strokeWidth={1.8} />,
         isExpanded: true,
         description: `
 - Designed and implemented the Cerebro web application with **Next.js** and backend services with **Node.js**.
@@ -30,7 +40,18 @@ const experiences: ExperienceItemType[] = [
 - Worked on portfolio management features and real-time crypto data handling.
 - Built internal admin and data collection systems across **6 on-chain platforms** and **8 major exchanges**.
         `.trim(),
-        skills: ['Next.js', 'Node.js', 'Admin Dashboard', 'Crypto Data', 'TypeScript'],
+        skills: [
+          'Next.js',
+          'NestJS',
+          'TypeScript',
+          'MongoDB',
+          'Redis',
+          'Crypto Portfolio',
+          'Real-time Data',
+          'Admin Dashboard',
+          'Data Ingestion',
+          'API Integration',
+        ],
       },
     ],
   },
@@ -48,7 +69,7 @@ const experiences: ExperienceItemType[] = [
           start: '04.2024',
           end: '01.2025',
         },
-        icon: <LayersTwo01 strokeWidth={1.8} />,
+        icon: <Code02 strokeWidth={1.8} />,
         description: `
 - Developed admin dashboard features and helped re-architect parts of the system, reducing page load time by **30%**.
 - Delivered and improved mobile and tablet applications for device control and meeting room management.
@@ -64,7 +85,7 @@ const experiences: ExperienceItemType[] = [
           start: '10.2023',
           end: '01.2024',
         },
-        icon: <Monitor01 strokeWidth={1.8} />,
+        icon: <Compass strokeWidth={1.8} />,
         description: `
 - Built an interactive floor plan and equipment layout editor using **React**, **Node.js**, and **SVG**.
 - Owned the project end to end as a solo developer.
@@ -79,12 +100,12 @@ const projects: ExperienceItemType[] = [
   {
     id: 'greenmaster-go',
     companyName: 'GreenMaster Go',
+    companyLogo: '/works/greenmaster_logo.jpg',
     positions: [
       {
         id: 'greenmaster-go-project',
         title: 'ERP platform for field operations',
-        icon: <LayersTwo01 strokeWidth={1.8} />,
-        isExpanded: true,
+        icon: <BarLineChart strokeWidth={1.8} />,
         description: `
 - Built an ERP-style product to help digitize workflows for more than **3,800 customers** and **200 technicians**.
 - Worked across web and mobile surfaces to support operational flows used in day-to-day field work.
@@ -101,7 +122,7 @@ const projects: ExperienceItemType[] = [
       {
         id: 'express-boilerplate-project',
         title: 'Reusable REST API starter',
-        icon: <Code02 strokeWidth={1.8} />,
+        icon: <Server03 strokeWidth={1.8} />,
         description: `
 - Created a reusable backend starter focused on authentication, API structure, and practical project setup.
 - Used it as a foundation for learning and for speeding up small service prototypes.
