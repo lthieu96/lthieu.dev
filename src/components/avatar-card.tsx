@@ -3,9 +3,9 @@
 import { HalftoneDots } from '@paper-design/shaders-react'
 import { AnimatePresence, motion } from 'motion/react'
 import Image from 'next/image'
+import { useTheme } from 'next-themes'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AvatarShader } from '@/components/avatar-shader'
-import { useTheme } from 'next-themes'
 
 const DEBUG_LENS = false
 const LENS = 76
@@ -56,6 +56,15 @@ function positionLens(
   lens.style.left = `${x - LENS / 2 - LENS_BORDER_OFFSET}px`
   lens.style.top = `${y - LENS / 2 - LENS_BORDER_OFFSET}px`
   wrap.style.transform = `translate(${cfg.x - x + LENS / 2}px, ${cfg.y - y + LENS / 2}px)`
+}
+
+function getRelativePoint(card: HTMLDivElement, clientX: number, clientY: number) {
+  const rect = card.getBoundingClientRect()
+
+  return {
+    x: clientX - rect.left,
+    y: clientY - rect.top,
+  }
 }
 
 export function AvatarCard() {
@@ -142,6 +151,66 @@ export function AvatarCard() {
     canvasConfigRef.current = null
   }, [])
 
+  const handlePointerEnter = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== 'mouse') return
+
+    const config = computeCanvas(e.currentTarget)
+    canvasConfigRef.current = config
+    setCanvasConfig(config)
+  }, [])
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const card = cardRef.current
+    const lens = lensRef.current
+    const wrap = halftoneWrapRef.current
+
+    if (!card || !lens || !wrap) return
+
+    let cfg = canvasConfigRef.current
+
+    if (!cfg) {
+      cfg = computeCanvas(card)
+      canvasConfigRef.current = cfg
+      setCanvasConfig(cfg)
+    }
+
+    const { x, y } = getRelativePoint(card, e.clientX, e.clientY)
+    positionLens(lens, wrap, cfg, x, y)
+  }, [])
+
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === 'mouse') return
+
+    const card = e.currentTarget
+    const config = computeCanvas(card)
+    canvasConfigRef.current = config
+    setCanvasConfig(config)
+
+    requestAnimationFrame(() => {
+      const lens = lensRef.current
+      const wrap = halftoneWrapRef.current
+      if (!lens || !wrap) return
+
+      const { x, y } = getRelativePoint(card, e.clientX, e.clientY)
+      positionLens(lens, wrap, config, x, y)
+    })
+  }, [])
+
+  const handlePointerLeave = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (DEBUG_LENS) return
+    if (e.pointerType !== 'mouse') return
+
+    setCanvasConfig(null)
+    canvasConfigRef.current = null
+  }, [])
+
+  const handlePointerEnd = useCallback(() => {
+    if (DEBUG_LENS) return
+
+    setCanvasConfig(null)
+    canvasConfigRef.current = null
+  }, [])
+
   return (
     <div className="relative w-full max-w-[250px] overflow-clip p-2">
       <AvatarShader />
@@ -149,10 +218,19 @@ export function AvatarCard() {
       <div
         ref={cardRef}
         className="relative aspect-4/5 overflow-hidden rounded-sm border border-black/8 bg-[#ecebe7] shadow-[0_24px_80px_rgba(15,15,15,0.12)] dark:border-white/8 dark:bg-[#1c1c1a]"
-        style={{ cursor: canvasConfig && !DEBUG_LENS ? 'none' : undefined }}
+        style={{
+          cursor: canvasConfig && !DEBUG_LENS ? 'none' : undefined,
+          touchAction: 'manipulation',
+        }}
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onPointerEnter={handlePointerEnter}
+        onPointerMove={handlePointerMove}
+        onPointerDown={handlePointerDown}
+        onPointerLeave={handlePointerLeave}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_16%,rgba(255,255,255,0.92),rgba(255,255,255,0.52)_36%,transparent_74%)] dark:bg-[radial-gradient(circle_at_50%_16%,rgba(255,255,255,0.08),rgba(255,255,255,0.02)_36%,transparent_74%)]" />
         <div

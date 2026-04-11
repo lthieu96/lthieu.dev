@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 
 export function ThemeSwitch() {
-  const { resolvedTheme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme, theme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -18,15 +18,17 @@ export function ThemeSwitch() {
     return <div className="size-8" />
   }
 
-  const isDark = resolvedTheme === 'dark'
+  const currentTheme = theme ?? resolvedTheme ?? 'light'
+  const isDark = currentTheme === 'dark'
 
   return (
     <Button
+      type="button"
       variant="ghost"
       size="icon-sm"
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="relative overflow-hidden text-foreground/60"
+      className="relative overflow-hidden text-foreground/60 touch-manipulation"
     >
       <AnimatePresence mode="popLayout" initial={false}>
         {isDark ? (

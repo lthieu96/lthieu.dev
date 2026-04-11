@@ -129,7 +129,7 @@ function SocialBadge({ type }: { type: 'github' | 'linkedin' }) {
 
 export function InformationSection() {
   return (
-    <Section className="border-b border-[color:var(--layout-line)]">
+    <Section>
       <div className="px-4 py-6 pb-5 sm:pb-6 sm:px-6 sm:py-8 overflow-hidden">
         <InformationRow
           icon={currentRole.icon}
@@ -137,7 +137,7 @@ export function InformationSection() {
             <p className="text-balance">
               {currentRole.title}
               <a
-                className="ml-0.5 font-medium underline-offset-4 hover:underline"
+                className="ml-0.5 font-medium underline-offset-4 decoration-1 hover:underline"
                 href={currentRole.href}
                 target="_blank"
                 rel="noreferrer"
