@@ -16,7 +16,7 @@ export default function Home() {
               <h1 className="font-serif text-[30px] leading-none font-medium text-foreground">
                 Hieu Le
               </h1>
-              <div className="w-8 h-[1px] bg-black/15 dark:bg-white/[0.18]" />
+              <div className="h-[1px] w-8 bg-[color:var(--layout-line)]" />
             </div>
             <div className="mt-0.5 mb-2 h-6 w-full overflow-hidden">
               <TextFlip className="w-full text-sm leading-6 text-muted-foreground" interval={2.8}>

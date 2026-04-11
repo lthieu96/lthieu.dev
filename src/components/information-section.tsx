@@ -1,11 +1,9 @@
 'use client'
 
-import type { ComponentType, ReactNode, SVGProps } from 'react'
 import {
   ArrowRight,
   Clock,
   Code02,
-  Globe01,
   Link03,
   Mail01,
   MarkerPin01,
@@ -13,6 +11,7 @@ import {
   User01,
 } from '@untitledui/icons'
 import { motion } from 'motion/react'
+import type { ComponentType, ReactNode, SVGProps } from 'react'
 import { CurrentTime } from '@/components/current-time'
 import { Section } from '@/components/section'
 import { Button } from '@/components/ui/button'
@@ -130,8 +129,8 @@ function SocialBadge({ type }: { type: 'github' | 'linkedin' }) {
 
 export function InformationSection() {
   return (
-    <Section className="border-b border-border">
-      <div className="px-4 py-6 pb-4 sm:pb-4 sm:px-6 sm:py-8 overflow-hidden">
+    <Section className="border-b border-[color:var(--layout-line)]">
+      <div className="px-4 py-6 pb-5 sm:pb-6 sm:px-6 sm:py-8 overflow-hidden">
         <InformationRow
           icon={currentRole.icon}
           content={

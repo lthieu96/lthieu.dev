@@ -7,7 +7,10 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --theme-transition-duration: 400ms;
+  --theme-transition-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --foreground-muted: oklch(0.556 0 0);
+  --layout-line: rgba(0, 0, 0, 0.08);
   --grid-line: rgba(0, 0, 0, 0.04);
 
   /* shadcn tokens — light */
@@ -47,6 +50,7 @@
 
 .dark {
   --foreground-muted: oklch(0.708 0 0);
+  --layout-line: rgba(255, 255, 255, 0.08);
   --grid-line: rgba(255, 255, 255, 0.04);
 
   /* shadcn tokens — dark */
@@ -163,11 +167,7 @@ body {
 }
 
 .default-border-text-color {
-  color: rgba(0, 0, 0, 0.08);
-}
-
-.dark .default-border-text-color {
-  color: rgba(255, 255, 255, 0.08);
+  color: var(--layout-line);
 }
 
 /*
@@ -185,9 +185,23 @@ body {
   }
 }
 
-/* Smooth theme transitions — only color/bg/border, not layout or transforms */
-*, *::before, *::after {
-  transition-property: color, background-color, border-color, fill, stroke, opacity;
-  transition-duration: 300ms;
-  transition-timing-function: ease;
+body {
+  transition:
+    background-color var(--theme-transition-duration) var(--theme-transition-ease),
+    color var(--theme-transition-duration) var(--theme-transition-ease);
+}
+
+body *,
+body *::before,
+body *::after {
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    fill,
+    stroke,
+    box-shadow,
+    text-decoration-color;
+  transition-duration: var(--theme-transition-duration);
+  transition-timing-function: var(--theme-transition-ease);
 }

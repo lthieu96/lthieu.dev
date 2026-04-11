@@ -7,7 +7,7 @@ function Diamond({ className = '' }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={`absolute z-[99] size-1.5 rotate-45 border border-black/[0.15] dark:border-white/[0.18] bg-[var(--background)] ${className}`}
+      className={`absolute z-[99] size-1.5 rotate-45 border border-[color:var(--layout-line)] bg-background ${className}`}
     />
   )
 }
@@ -43,7 +43,7 @@ function VerticalLine({ segments, edge }: { segments: Segment[]; edge: 'left' | 
       >
         {segments.map((seg, i) => (
           <div
-            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+            // biome-ignore lint/suspicious/noArrayIndexKey: segment order is static by design
             key={i}
             style={{
               flex: seg.flex,
