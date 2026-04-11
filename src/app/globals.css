@@ -153,6 +153,10 @@ body {
   min-height: 100%;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   background-color: var(--background);
   font-family: var(--font-geist-mono), monospace;

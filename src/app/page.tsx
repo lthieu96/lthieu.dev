@@ -5,6 +5,7 @@ import { EducationSection } from '@/components/education-section'
 import { ExperienceSection } from '@/components/experience-section'
 import { InformationSection } from '@/components/information-section'
 import { Section } from '@/components/section'
+import { ShowcaseSection } from '@/components/showcase-section'
 import { TextFlip } from '@/components/text-flip/text-flip'
 
 export default function Home() {
@@ -43,6 +44,8 @@ export default function Home() {
       <AboutSection />
       <DividerSlash />
       <ExperienceSection />
+      <DividerSlash />
+      <ShowcaseSection />
       <DividerSlash />
       <EducationSection />
       <DividerSlash />
