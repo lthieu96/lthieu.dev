@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Lora } from 'next/font/google'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { Noise } from '@/components/noise'
+import { PageLoader } from '@/components/page-loader'
 import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
@@ -41,6 +42,7 @@ export default function RootLayout({
     >
       <body className="relative min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="light">
+          <PageLoader />
           <Noise className="fixed" style={{ zIndex: 20 }} />
           <Footer />
           <div className="relative z-10 bg-background flex flex-col flex-1">
