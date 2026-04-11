@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Lora } from 'next/font/google'
+import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { Noise } from '@/components/noise'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -40,9 +41,13 @@ export default function RootLayout({
     >
       <body className="relative min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="light">
-          <Noise className="fixed" />
-          <Header />
-          <div className="flex flex-1 flex-col">{children}</div>
+          <Noise className="fixed" style={{ zIndex: 20 }} />
+          <Footer />
+          <div className="relative z-10 bg-background flex flex-col flex-1">
+            <Header />
+            <div className="flex flex-1 flex-col">{children}</div>
+          </div>
+          <div aria-hidden="true" className="h-[150px] sm:h-[210px] lg:h-[300px] shrink-0" />
         </ThemeProvider>
       </body>
     </html>

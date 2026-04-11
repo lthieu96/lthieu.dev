@@ -45,6 +45,49 @@ export default function Home() {
       <ExperienceSection />
       <DividerSlash />
       <EducationSection />
+      <DividerSlash />
+      <Section className="border-b border-[color:var(--layout-line)]">
+        <div className="px-4 py-4 sm:px-6 flex justify-end">
+          <p className="font-mono text-[11px] text-muted-foreground">
+            Inspired by{' '}
+            <a
+              href="https://tailwindcss.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              tailwindcss.com
+            </a>
+            {' / '}
+            <a
+              href="https://ui.shadcn.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              ui.shadcn.com
+            </a>
+            {' / '}
+            <a
+              href="https://chanhdai.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              chanhdai.com
+            </a>
+            {' / '}
+            <a
+              href="https://zed.dev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              zed.dev
+            </a>
+          </p>
+        </div>
+      </Section>
     </>
   )
 }

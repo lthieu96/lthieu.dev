@@ -4,7 +4,7 @@ export function DividerSlash() {
   return (
     <section
       aria-hidden="true"
-      className="relative h-3.5 w-screen
+      className="relative h-3.5 w-full
 				before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-border
 				after:content-[''] after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-border"
     >
