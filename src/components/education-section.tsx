@@ -35,9 +35,9 @@ export function EducationSection() {
 
                 <div>
                   <p className="font-mono text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
-                    GPA
+                    Classification
                   </p>
-                  <p className="mt-1 text-sm leading-6 text-foreground">3.28 / 4.0</p>
+                  <p className="mt-1 text-sm leading-6 text-foreground">Very Good</p>
                 </div>
               </div>
             </div>
