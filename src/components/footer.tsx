@@ -14,7 +14,7 @@ export function Footer() {
     >
       {/* Shader as regular HTML element covering full footer */}
       <div className="absolute inset-0">
-        <ShaderBackground />
+        <ShaderBackground scale={0.6} speed={1} lightColorBack="#fdfdfc" darkColorBack="#111216" />
       </div>
 
       <svg
@@ -44,13 +44,20 @@ export function Footer() {
               fill="black"
               style={{ fontFamily: 'Gloock, serif' }}
             >
-              HieuLe
+              hieu-le
             </text>
           </mask>
         </defs>
 
         {/* Rect covering entire footer (incl. overflow areas), text-shaped holes reveal shader */}
-        <rect x="-2000" y="-500" width="5000" height="1500" fill="var(--background)" mask="url(#footer-bg-mask)" />
+        <rect
+          x="-2000"
+          y="-500"
+          width="5000"
+          height="1500"
+          fill="var(--background)"
+          mask="url(#footer-bg-mask)"
+        />
 
         {/* Stroke outline on top */}
         <text
@@ -59,14 +66,14 @@ export function Footer() {
           textAnchor="start"
           fill="none"
           stroke="var(--layout-line)"
-          strokeWidth="0.5"
+          strokeWidth="0.7"
           fontSize="350"
           fontWeight="800"
           textLength="1000"
           lengthAdjust="spacingAndGlyphs"
           style={{ fontFamily: 'Gloock, serif' }}
         >
-          HieuLe
+          hieu-le
         </text>
       </svg>
 

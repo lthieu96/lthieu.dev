@@ -20,7 +20,7 @@ const IMAGE_CONTAINER = {
   top: 0,
   bottom: 0,
 } as const
-const IMAGE_CLASS_NAME = 'object-contain object-bottom contrast-110'
+const IMAGE_CLASS_NAME = 'object-contain object-bottom brightness-110 contrast-105'
 
 interface CanvasConfig {
   w: number

@@ -12,7 +12,7 @@ export function Noise({
     <div
       id="global-noise-overlay"
       aria-hidden="true"
-      className={`pointer-events-none [z-index:-1] absolute inset-0 bg-repeat opacity-[0.12] dark:opacity-[0.07] ${className}`}
+      className={`pointer-events-none [z-index:-1] absolute inset-0 bg-repeat opacity-[0.15] dark:opacity-[0.07] ${className}`}
       style={{
         backgroundImage: NOISE_DATA_URL,
         backgroundSize: '300px 300px',
