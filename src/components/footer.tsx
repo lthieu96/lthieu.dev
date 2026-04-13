@@ -44,7 +44,7 @@ export function Footer() {
               fill="black"
               style={{ fontFamily: 'Gloock, serif' }}
             >
-              hieu-le
+              hieu.le
             </text>
           </mask>
         </defs>
@@ -73,7 +73,7 @@ export function Footer() {
           lengthAdjust="spacingAndGlyphs"
           style={{ fontFamily: 'Gloock, serif' }}
         >
-          hieu-le
+          hieu.le
         </text>
       </svg>
 
