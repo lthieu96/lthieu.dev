@@ -61,17 +61,17 @@ export const showcaseProjects: ShowcaseProject[] = [
       ...videoGallery([
         {
           src: 'https://1916iuqinl.ufs.sh/f/80nP6vklQJwGxhCbCv1ihYnUuyZP9rmgvB4b03cwHLFpCEG6',
-          poster: '/works/showcase/cerebro/dashboard-1.png',
+          poster: '/works/showcase/cerebro/thumbnail-1.png',
           alt: 'Cerebro product walkthrough 1',
         },
         {
           src: 'https://1916iuqinl.ufs.sh/f/80nP6vklQJwG84qqM2lQJwGaViyTt48OzupBqNXfF0LcPlYE',
-          poster: '/works/showcase/cerebro/dashboard-2.png',
+          poster: '/works/showcase/cerebro/thumbnail-2.png',
           alt: 'Cerebro product walkthrough 2',
         },
         {
           src: 'https://1916iuqinl.ufs.sh/f/80nP6vklQJwGArvdOV7U5KTcx0rovswSmCnXB9yLOEaNF8dP',
-          poster: '/works/showcase/cerebro/dashboard-3.png',
+          poster: '/works/showcase/cerebro/thumbnail-3.png',
           alt: 'Cerebro product walkthrough 3',
         },
       ]),

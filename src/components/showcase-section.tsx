@@ -162,6 +162,8 @@ function ShowcaseViewer({
 }) {
   const stageRef = useRef<HTMLDivElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
+  const isResizingRef = useRef(false)
+  const resizeEndedAtRef = useRef(0)
   const [isStageFullscreen, setIsStageFullscreen] = useState(false)
   const [modalWidth, setModalWidth] = useState<number | null>(null)
 
@@ -238,17 +240,28 @@ function ShowcaseViewer({
     await stage.requestFullscreen()
   }
 
+  const handleBackdropClick = () => {
+    if (isResizingRef.current || Date.now() - resizeEndedAtRef.current < 350) {
+      return
+    }
+
+    onClose()
+  }
+
   const handleResizeStart = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (window.innerWidth < 640 || !modalRef.current) return
 
     event.preventDefault()
     event.stopPropagation()
+    event.currentTarget.setPointerCapture(event.pointerId)
+
+    isResizingRef.current = true
 
     const startX = event.clientX
     const startWidth = modalRef.current.getBoundingClientRect().width
     const viewportPadding = window.innerWidth >= 640 ? 32 : 16
-    const minWidth = 880
-    const maxWidth = Math.min(1360, window.innerWidth - viewportPadding)
+    const maxWidth = window.innerWidth - viewportPadding
+    const minWidth = Math.min(880, maxWidth)
 
     document.body.style.userSelect = 'none'
     document.body.style.cursor = 'ew-resize'
@@ -261,7 +274,11 @@ function ShowcaseViewer({
       setModalWidth(nextWidth)
     }
 
-    const handlePointerEnd = () => {
+    const handlePointerEnd = (endEvent: PointerEvent) => {
+      endEvent.preventDefault()
+      endEvent.stopPropagation()
+      isResizingRef.current = false
+      resizeEndedAtRef.current = Date.now()
       document.body.style.userSelect = ''
       document.body.style.cursor = ''
       window.removeEventListener('pointermove', handlePointerMove)
@@ -282,13 +299,16 @@ function ShowcaseViewer({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-      onClick={onClose}
+      onClick={handleBackdropClick}
     >
       <motion.div
         ref={modalRef}
         className={cn(
-          'relative flex h-[min(980px,calc(100vh-0.25rem))] w-full max-w-[min(1360px,calc(100vw-1rem))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-background shadow-[0_32px_120px_rgba(0,0,0,0.28)]',
-          'sm:max-h-[calc(100vh-0.5rem)] sm:max-w-[min(1360px,calc(100vw-2rem))] sm:min-h-[760px] sm:min-w-[780px]',
+          'relative flex h-[min(980px,calc(100vh-0.25rem))] w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-background shadow-[0_32px_120px_rgba(0,0,0,0.28)]',
+          'sm:max-h-[calc(100vh-0.5rem)] sm:min-h-[760px] sm:min-w-[780px]',
+          modalWidth
+            ? 'max-w-[calc(100vw-1rem)] sm:max-w-[calc(100vw-2rem)]'
+            : 'max-w-[min(1360px,calc(100vw-1rem))] sm:max-w-[min(1360px,calc(100vw-2rem))]',
         )}
         style={modalWidth ? { width: `${modalWidth}px` } : undefined}
         initial={{ opacity: 0, y: 18, scale: 0.992 }}
