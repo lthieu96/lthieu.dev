@@ -115,21 +115,30 @@ export const showcaseProjects: ShowcaseProject[] = [
     summary:
       'A compact product system spanning desktop dashboards and mobile views, with an emphasis on hierarchy, spacing discipline, and responsive consistency.',
     tags: ['Responsive UI', 'Mobile Surfaces', 'Product Design'],
-    media: imageGallery(
-      'greenmaster',
-      [
-        'dashboard-1.png',
-        'dashboard-2.png',
-        'dashboard-3.png',
-        'dashboard-4.png',
-        'mobile-1.jpeg',
-        'mobile-2.jpeg',
-        'mobile-3.jpeg',
-        'mobile-4.jpeg',
-        'mobile-5.jpeg',
-        'mobile-6.jpeg',
-      ],
-      'Greenmaster interface',
-    ),
+    media: [
+      ...videoGallery([
+        {
+          src: 'https://1916iuqinl.ufs.sh/f/80nP6vklQJwGxhwtNUR1ihYnUuyZP9rmgvB4b03cwHLFpCEG',
+          poster: '/works/showcase/greenmaster/thumbnail-1.png',
+          alt: 'Greenmaster product walkthrough 1',
+        },
+      ]),
+      ...imageGallery(
+        'greenmaster',
+        [
+          'dashboard-1.png',
+          'dashboard-2.png',
+          'dashboard-3.png',
+          'dashboard-4.png',
+          'mobile-1.jpeg',
+          'mobile-2.jpeg',
+          'mobile-3.jpeg',
+          'mobile-4.jpeg',
+          'mobile-5.jpeg',
+          'mobile-6.jpeg',
+        ],
+        'Greenmaster interface',
+      ),
+    ],
   },
 ]
