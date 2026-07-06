@@ -18,9 +18,9 @@ const stageVariants = {
 }
 
 const stageTransition = {
-  x: { type: 'spring', stiffness: 300, damping: 32, mass: 0.85 },
-  opacity: { duration: 0.32, ease: EASE },
-  scale: { duration: 0.32, ease: EASE },
+  x: { type: 'spring', stiffness: 380, damping: 34, mass: 0.75 },
+  opacity: { duration: 0.24, ease: EASE },
+  scale: { duration: 0.24, ease: EASE },
 } as const
 
 function MediaStage({ media }: { media: ShowcaseMedia }) {
@@ -44,8 +44,9 @@ function MediaStage({ media }: { media: ShowcaseMedia }) {
         src={media.src}
         alt={media.alt}
         fill
+        priority
         sizes="100vw"
-        className="object-contain [filter:drop-shadow(0_18px_50px_rgba(0,0,0,0.3))]"
+        className="object-contain"
       />
     </div>
   )
@@ -129,15 +130,27 @@ export function ShowcaseViewer({
     active?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
   }, [activeIndex])
 
+  // Fetch AND decode neighboring images ahead of time so navigating never
+  // blocks on network or main-thread bitmap decoding mid-animation
+  useEffect(() => {
+    if (!project) return
+    const total = project.media.length
+    const neighbors = [
+      project.media[(activeIndex + 1) % total],
+      project.media[(activeIndex - 1 + total) % total],
+    ]
+    for (const media of neighbors) {
+      if (media.type !== 'image') continue
+      const img = new window.Image()
+      img.src = media.src
+      img.decode?.().catch(() => {})
+    }
+  }, [project, activeIndex])
+
   if (!project) return null
 
   const activeMedia = project.media[activeIndex]
   const total = project.media.length
-  // Neighbors get preloaded invisibly so navigation never waits on the network
-  const neighborImages = [
-    project.media[(activeIndex + 1) % total],
-    project.media[(activeIndex - 1 + total) % total],
-  ].filter((media) => media.type === 'image' && media !== activeMedia)
 
   const toggleStageFullscreen = async () => {
     const stage = stageRef.current
@@ -154,7 +167,7 @@ export function ShowcaseViewer({
   return (
     <motion.div
       key={project.slug}
-      className="fixed inset-0 z-[140] flex flex-col bg-background/[0.97] backdrop-blur-2xl"
+      className="fixed inset-0 z-[140] flex flex-col bg-background"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -227,16 +240,6 @@ export function ShowcaseViewer({
             <MediaStage media={activeMedia} />
           </motion.div>
         </AnimatePresence>
-
-        {/* Invisible neighbor preloads */}
-        <div aria-hidden="true" className="pointer-events-none absolute size-px overflow-hidden opacity-0">
-          {neighborImages.map(
-            (media) =>
-              media.type === 'image' && (
-                <Image key={media.src} src={media.src} alt="" width={32} height={32} />
-              ),
-          )}
-        </div>
 
         {total > 1 ? (
           <>
