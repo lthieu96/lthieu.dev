@@ -17,12 +17,12 @@ export function Footer() {
         <ShaderBackground
           scale={0.6}
           speed={1}
-          lightColorBack="#f7fafd"
-          lightColorFront="#cadcec"
-          darkColorBack="#0d131a"
-          darkColorFront="#23415c"
-          bgLight="#f8fafc"
-          bgDark="#101720"
+          lightColorBack="#f8f7f3"
+          lightColorFront="#b3d0e8"
+          darkColorBack="#0b0a08"
+          darkColorFront="#3f6f9e"
+          bgLight="#f8f7f3"
+          bgDark="#0b0a08"
         />
       </div>
 
