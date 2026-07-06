@@ -25,8 +25,9 @@ const lora = Lora({
 })
 
 export const metadata: Metadata = {
-  title: 'Hieu Le',
-  description: 'Personal portfolio',
+  title: 'Hieu Le — Fullstack Developer',
+  description:
+    'Portfolio of Hieu Le, a fullstack developer in Ho Chi Minh City building web products end to end.',
 }
 
 export default function RootLayout({
@@ -41,7 +42,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="relative min-h-full flex flex-col">
-        <ThemeProvider attribute="class" defaultTheme="light">
+        <ThemeProvider attribute="class" defaultTheme="dark">
           <PageLoader />
           <Noise className="fixed" style={{ zIndex: 20 }} />
           <Footer />

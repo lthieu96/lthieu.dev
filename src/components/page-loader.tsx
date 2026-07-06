@@ -47,6 +47,8 @@ export function PageLoader() {
       setProgress(100)
       setTimeout(() => {
         setHiding(true)
+        document.documentElement.dataset.loaderDone = 'true'
+        window.dispatchEvent(new Event('page-loader:done'))
         setTimeout(() => setHidden(true), 700)
       }, 200)
     })
@@ -96,7 +98,7 @@ export function PageLoader() {
       {/* Bottom — full-width progress bar */}
       <div className="relative h-[3px] w-full bg-[color:var(--layout-line)]">
         <div
-          className="absolute inset-y-0 left-0 bg-foreground/30"
+          className="absolute inset-y-0 left-0 bg-accent-brand"
           style={{
             width: `${progress}%`,
             transition: 'width 0.1s linear',

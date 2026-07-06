@@ -14,7 +14,16 @@ export function Footer() {
     >
       {/* Shader as regular HTML element covering full footer */}
       <div className="absolute inset-0">
-        <ShaderBackground scale={0.6} speed={1} lightColorBack="#fdfdfc" darkColorBack="#111216" />
+        <ShaderBackground
+          scale={0.6}
+          speed={1}
+          lightColorBack="#fbf7f1"
+          lightColorFront="#ecd9c3"
+          darkColorBack="#161009"
+          darkColorFront="#472a12"
+          bgLight="#faf7f2"
+          bgDark="#171310"
+        />
       </div>
 
       <svg
