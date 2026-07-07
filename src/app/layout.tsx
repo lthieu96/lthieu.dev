@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono, Lora } from 'next/font/google'
+import { Caveat, Geist, Geist_Mono, Space_Grotesk } from 'next/font/google'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { Noise } from '@/components/noise'
 import { PageLoader } from '@/components/page-loader'
+import { SheetFrame } from '@/components/sheet-frame'
 import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
@@ -19,8 +20,13 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
-const lora = Lora({
-  variable: '--font-lora',
+const spaceGrotesk = Space_Grotesk({
+  variable: '--font-space-grotesk',
+  subsets: ['latin'],
+})
+
+const caveat = Caveat({
+  variable: '--font-caveat',
   subsets: ['latin'],
 })
 
@@ -38,15 +44,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${lora.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${caveat.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="relative min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="dark">
           <PageLoader />
           <Noise className="fixed" style={{ zIndex: 20 }} />
+          <SheetFrame />
           <Footer />
-          <div className="relative z-10 bg-background flex flex-col flex-1">
+          <div className="drafting-grid relative z-10 bg-background flex flex-col flex-1">
             <Header />
             <div className="flex flex-1 flex-col">{children}</div>
           </div>

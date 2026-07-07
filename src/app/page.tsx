@@ -1,19 +1,19 @@
-import { AboutEditorial } from '@/components/about-editorial'
-import { ContactCta } from '@/components/contact-cta'
-import { ExperienceEditorial } from '@/components/experience-editorial'
+import { AboutTechnical } from '@/components/about-technical'
+import { ContactTechnical } from '@/components/contact-technical'
+import { ExperienceTechnical } from '@/components/experience-technical'
 import { Hero } from '@/components/hero'
 import { Marquee } from '@/components/marquee'
-import { WorksEditorial } from '@/components/works-editorial'
+import { WorksTechnical } from '@/components/works-technical'
 
 export default function Home() {
   return (
     <>
       <Hero />
       <Marquee />
-      <AboutEditorial />
-      <WorksEditorial />
-      <ExperienceEditorial />
-      <ContactCta />
+      <AboutTechnical />
+      <WorksTechnical />
+      <ExperienceTechnical />
+      <ContactTechnical />
     </>
   )
 }

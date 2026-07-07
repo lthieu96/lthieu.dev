@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { CrossMark } from '@/components/cross-mark'
 
 export function PageLoader() {
   const [progress, setProgress] = useState(0)
@@ -70,18 +71,29 @@ export function PageLoader() {
         pointerEvents: hiding ? 'none' : 'all',
       }}
     >
-      {/* Top — site name */}
-      <div className="flex items-center px-6 pt-6 sm:px-10 sm:pt-8">
+      {/* Sheet registration marks */}
+      <div className="pointer-events-none absolute inset-0 text-foreground/30">
+        <CrossMark className="top-4 left-4" />
+        <CrossMark className="top-4 right-4" />
+        <CrossMark className="bottom-4 left-4" />
+        <CrossMark className="right-4 bottom-4" />
+      </div>
+
+      {/* Top — sheet header */}
+      <div className="flex items-center justify-between px-8 pt-8 sm:px-12">
         <span className="font-mono text-xs tracking-[0.3em] text-muted-foreground uppercase">
           lthieu.dev
+        </span>
+        <span className="font-mono text-xs tracking-[0.2em] text-muted-foreground uppercase">
+          Sheet 01 / 01
         </span>
       </div>
 
       {/* Center — large percentage */}
       <div className="flex flex-1 flex-col items-center justify-center">
-        <div className="flex items-baseline leading-none" style={{ fontFamily: 'Gloock, serif' }}>
+        <div className="flex items-baseline font-display leading-none font-bold">
           <span
-            className="tabular-nums text-foreground"
+            className="text-foreground tabular-nums"
             style={{ fontSize: 'clamp(56px, 12vw, 110px)' }}
           >
             {String(progress).padStart(2, '0')}
@@ -93,6 +105,9 @@ export function PageLoader() {
             %
           </span>
         </div>
+        <p className="mt-4 font-mono text-[10px] tracking-[0.3em] text-muted-foreground uppercase">
+          Plotting blueprint
+        </p>
       </div>
 
       {/* Bottom — full-width progress bar */}

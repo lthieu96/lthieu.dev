@@ -1,11 +1,5 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: 'Gloock';
-  src: url('/font/Gloock-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-display: swap;
-}
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 /*
@@ -20,39 +14,43 @@
 :root {
   --theme-transition-duration: 400ms;
   --theme-transition-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --foreground-muted: oklch(0.5 0.01 80);
-  --layout-line: rgba(20, 16, 8, 0.1);
-  --grid-line: rgba(20, 16, 8, 0.04);
+  --foreground-muted: oklch(0.48 0.02 255);
+  --layout-line: rgba(35, 48, 71, 0.16);
+  --grid-line: rgba(59, 102, 155, 0.06);
+  --grid-line-major: rgba(59, 102, 155, 0.12);
 
-  /* editorial accent — soft sea blue */
-  --accent-brand: oklch(0.54 0.11 242);
-  --accent-brand-soft: oklch(0.54 0.11 242 / 12%);
+  /* technical drawing accent — engineering ink blue */
+  --accent-brand: oklch(0.52 0.1 248);
+  --accent-brand-soft: oklch(0.52 0.1 248 / 12%);
+  /* revision stamp red — use sparingly (stamps, current markers) */
+  --accent-stamp: oklch(0.55 0.16 28);
 
-  /* shadcn tokens — light (warm paper) */
-  --background: oklch(0.975 0.005 85);
-  --foreground: oklch(0.18 0.008 80);
-  --card: oklch(0.99 0.003 85);
-  --card-foreground: oklch(0.18 0.008 80);
-  --popover: oklch(0.99 0.003 85);
-  --popover-foreground: oklch(0.18 0.008 80);
-  --primary: oklch(0.205 0.008 80);
-  --primary-foreground: oklch(0.985 0.005 85);
-  --secondary: oklch(0.955 0.006 85);
-  --secondary-foreground: oklch(0.205 0.008 80);
-  --muted: oklch(0.945 0.006 85);
-  --muted-foreground: oklch(0.5 0.01 80);
-  --accent: oklch(0.955 0.006 85);
-  --accent-foreground: oklch(0.205 0.008 80);
+  /* shadcn tokens — light (drafting paper) */
+  --background: oklch(0.972 0.005 95);
+  --foreground: oklch(0.24 0.02 260);
+  --card: oklch(0.985 0.004 95);
+  --card-foreground: oklch(0.24 0.02 260);
+  --popover: oklch(0.985 0.004 95);
+  --popover-foreground: oklch(0.24 0.02 260);
+  --primary: oklch(0.26 0.02 260);
+  --primary-foreground: oklch(0.975 0.005 95);
+  --secondary: oklch(0.94 0.007 95);
+  --secondary-foreground: oklch(0.26 0.02 260);
+  --muted: oklch(0.935 0.007 95);
+  --muted-foreground: oklch(0.48 0.02 255);
+  --accent: oklch(0.94 0.007 95);
+  --accent-foreground: oklch(0.26 0.02 260);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.9 0.008 85);
-  --input: oklch(0.9 0.008 85);
-  --ring: oklch(0.54 0.11 242);
+  --border: oklch(0.87 0.012 250);
+  --input: oklch(0.87 0.012 250);
+  --ring: oklch(0.52 0.1 248);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  /* technical drawings have square corners */
+  --radius: 0rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -64,33 +62,35 @@
 }
 
 .dark {
-  --foreground-muted: oklch(0.68 0.01 85);
-  --layout-line: rgba(255, 250, 240, 0.1);
-  --grid-line: rgba(255, 250, 240, 0.04);
+  --foreground-muted: oklch(0.74 0.03 235);
+  --layout-line: rgba(205, 228, 250, 0.22);
+  --grid-line: rgba(205, 228, 250, 0.05);
+  --grid-line-major: rgba(205, 228, 250, 0.1);
 
-  /* editorial accent — soft powder sea blue on near-black */
-  --accent-brand: oklch(0.75 0.09 235);
-  --accent-brand-soft: oklch(0.75 0.09 235 / 14%);
+  /* technical drawing accent — chalk cyan on cyanotype blueprint */
+  --accent-brand: oklch(0.8 0.08 225);
+  --accent-brand-soft: oklch(0.8 0.08 225 / 14%);
+  --accent-stamp: oklch(0.72 0.13 25);
 
-  /* shadcn tokens — dark (warm near-black) */
-  --background: oklch(0.145 0.004 80);
-  --foreground: oklch(0.95 0.007 90);
-  --card: oklch(0.185 0.005 80);
-  --card-foreground: oklch(0.95 0.007 90);
-  --popover: oklch(0.185 0.005 80);
-  --popover-foreground: oklch(0.95 0.007 90);
-  --primary: oklch(0.92 0.007 90);
-  --primary-foreground: oklch(0.185 0.005 80);
-  --secondary: oklch(0.24 0.006 80);
-  --secondary-foreground: oklch(0.95 0.007 90);
-  --muted: oklch(0.24 0.006 80);
-  --muted-foreground: oklch(0.68 0.01 85);
-  --accent: oklch(0.24 0.006 80);
-  --accent-foreground: oklch(0.95 0.007 90);
+  /* shadcn tokens — dark (cyanotype blueprint) */
+  --background: oklch(0.28 0.055 257);
+  --foreground: oklch(0.95 0.015 225);
+  --card: oklch(0.31 0.055 257);
+  --card-foreground: oklch(0.95 0.015 225);
+  --popover: oklch(0.31 0.055 257);
+  --popover-foreground: oklch(0.95 0.015 225);
+  --primary: oklch(0.93 0.02 225);
+  --primary-foreground: oklch(0.28 0.055 257);
+  --secondary: oklch(0.335 0.05 257);
+  --secondary-foreground: oklch(0.95 0.015 225);
+  --muted: oklch(0.335 0.05 257);
+  --muted-foreground: oklch(0.74 0.03 235);
+  --accent: oklch(0.335 0.05 257);
+  --accent-foreground: oklch(0.95 0.015 225);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.75 0.09 235);
+  --border: rgba(205, 228, 250, 0.14);
+  --input: rgba(205, 228, 250, 0.18);
+  --ring: oklch(0.8 0.08 225);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -113,9 +113,10 @@
   --color-border: var(--border);
   --color-accent-brand: var(--accent-brand);
   --color-accent-brand-soft: var(--accent-brand-soft);
+  --color-accent-stamp: var(--accent-stamp);
   --font-sans: var(--font-geist-sans);
-  --font-serif: var(--font-lora);
-  --font-display: 'Gloock', var(--font-lora), serif;
+  --font-display: var(--font-space-grotesk);
+  --font-signature: var(--font-caveat);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -183,6 +184,31 @@ body {
 .container-editorial {
   max-width: 1440px;
   margin-inline: auto;
+}
+
+/* Drafting-paper grid — fine mm grid + heavier major lines, scrolls with the sheet */
+.drafting-grid {
+  background-image:
+    linear-gradient(to right, var(--grid-line-major) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line-major) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size:
+    96px 96px,
+    96px 96px,
+    12px 12px,
+    12px 12px;
+}
+
+/* 45° section-line hatching, as used for cut surfaces on drawings */
+.hatch {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--layout-line) 0,
+    var(--layout-line) 1px,
+    transparent 1px,
+    transparent 7px
+  );
 }
 
 /* Marquee strip */

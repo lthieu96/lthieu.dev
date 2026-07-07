@@ -181,7 +181,7 @@ export function ShowcaseViewer({
         transition={{ duration: 0.5, ease: EASE, delay: 0.08 }}
       >
         <div className="flex min-w-0 items-baseline gap-3 sm:gap-4">
-          <h3 className="shrink-0 font-display text-xl leading-none text-foreground sm:text-2xl">
+          <h3 className="shrink-0 font-display text-xl leading-none font-bold text-foreground uppercase sm:text-2xl">
             {project.title}
           </h3>
           <p className="hidden truncate font-mono text-[11px] tracking-[0.14em] text-muted-foreground uppercase md:block">
@@ -190,28 +190,16 @@ export function ShowcaseViewer({
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <span className="mr-1 font-mono text-xs text-muted-foreground tabular-nums sm:mr-2">
-            {String(activeIndex + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+          <span className="mr-1 font-mono text-xs tracking-[0.1em] text-muted-foreground uppercase tabular-nums sm:mr-2">
+            SHT {String(activeIndex + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
           </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="rounded-full"
-            onClick={toggleStageFullscreen}
-          >
+          <Button type="button" variant="ghost" size="icon-sm" onClick={toggleStageFullscreen}>
             {isStageFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
             <span className="sr-only">
               {isStageFullscreen ? 'Exit fullscreen' : 'Open fullscreen'}
             </span>
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="rounded-full"
-            onClick={onClose}
-          >
+          <Button type="button" variant="ghost" size="icon-sm" onClick={onClose}>
             <X className="size-4" />
             <span className="sr-only">Close showcase</span>
           </Button>
@@ -245,7 +233,7 @@ export function ShowcaseViewer({
           <>
             <button
               type="button"
-              className="absolute inset-y-0 left-3 z-10 my-auto flex size-11 items-center justify-center rounded-full border border-[color:var(--layout-line)] bg-background/70 text-muted-foreground backdrop-blur-md transition-colors duration-200 hover:border-accent-brand/60 hover:text-accent-brand sm:left-5"
+              className="absolute inset-y-0 left-3 z-10 my-auto flex size-11 items-center justify-center border border-[color:var(--layout-line)] bg-background/70 text-muted-foreground backdrop-blur-md transition-colors duration-200 hover:border-accent-brand/60 hover:text-accent-brand sm:left-5"
               onClick={() => navigate(activeIndex - 1, -1)}
             >
               <ChevronLeft className="size-5" />
@@ -253,7 +241,7 @@ export function ShowcaseViewer({
             </button>
             <button
               type="button"
-              className="absolute inset-y-0 right-3 z-10 my-auto flex size-11 items-center justify-center rounded-full border border-[color:var(--layout-line)] bg-background/70 text-muted-foreground backdrop-blur-md transition-colors duration-200 hover:border-accent-brand/60 hover:text-accent-brand sm:right-5"
+              className="absolute inset-y-0 right-3 z-10 my-auto flex size-11 items-center justify-center border border-[color:var(--layout-line)] bg-background/70 text-muted-foreground backdrop-blur-md transition-colors duration-200 hover:border-accent-brand/60 hover:text-accent-brand sm:right-5"
               onClick={() => navigate(activeIndex + 1, 1)}
             >
               <ChevronRight className="size-5" />
@@ -282,7 +270,7 @@ export function ShowcaseViewer({
                 type="button"
                 data-active={isActive}
                 className={cn(
-                  'relative aspect-[4/3] h-16 shrink-0 overflow-hidden rounded-md border transition-all duration-300 sm:h-20',
+                  'relative aspect-[4/3] h-16 shrink-0 overflow-hidden border transition-all duration-300 sm:h-20',
                   isActive
                     ? 'border-accent-brand opacity-100 ring-1 ring-accent-brand/40'
                     : 'border-[color:var(--layout-line)] opacity-50 hover:opacity-90',

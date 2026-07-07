@@ -17,12 +17,12 @@ export function Footer() {
         <ShaderBackground
           scale={0.6}
           speed={1}
-          lightColorBack="#f8f7f3"
-          lightColorFront="#b3d0e8"
-          darkColorBack="#0b0a08"
-          darkColorFront="#3f6f9e"
-          bgLight="#f8f7f3"
-          bgDark="#0b0a08"
+          lightColorBack="#f7f6f0"
+          lightColorFront="#b7c9dd"
+          darkColorBack="#16293f"
+          darkColorFront="#5c88b4"
+          bgLight="#f7f6f0"
+          bgDark="#16293f"
         />
       </div>
 
@@ -47,11 +47,11 @@ export function Footer() {
               y="278"
               textAnchor="start"
               fontSize="350"
-              fontWeight="800"
+              fontWeight="700"
               textLength="1000"
               lengthAdjust="spacingAndGlyphs"
               fill="black"
-              style={{ fontFamily: 'Gloock, serif' }}
+              style={{ fontFamily: 'var(--font-space-grotesk), sans-serif' }}
             >
               hieu.le
             </text>
@@ -77,10 +77,10 @@ export function Footer() {
           stroke="var(--layout-line)"
           strokeWidth="0.7"
           fontSize="350"
-          fontWeight="800"
+          fontWeight="700"
           textLength="1000"
           lengthAdjust="spacingAndGlyphs"
-          style={{ fontFamily: 'Gloock, serif' }}
+          style={{ fontFamily: 'var(--font-space-grotesk), sans-serif' }}
         >
           hieu.le
         </text>
