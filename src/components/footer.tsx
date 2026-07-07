@@ -1,6 +1,36 @@
+'use client'
+
+import { motion } from 'motion/react'
+import { useEffect, useState } from 'react'
 import { CrossMark } from '@/components/cross-mark'
 
 export function Footer() {
+  const [revealed, setRevealed] = useState(false)
+  const [reduced, setReduced] = useState(false)
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setReduced(true)
+      setRevealed(true)
+      return
+    }
+    // Trigger the plot once the footer reveal enters view (near the document bottom)
+    const check = () => {
+      const scrollBottom = window.innerHeight + window.scrollY
+      const docHeight = document.documentElement.scrollHeight
+      if (docHeight - scrollBottom < 300) setRevealed(true)
+    }
+    check()
+    window.addEventListener('scroll', check, { passive: true })
+    window.addEventListener('resize', check)
+    return () => {
+      window.removeEventListener('scroll', check)
+      window.removeEventListener('resize', check)
+    }
+  }, [])
+
+  const drawDuration = reduced ? 0 : 1.8
+
   return (
     <footer
       aria-hidden="true"
@@ -12,79 +42,102 @@ export function Footer() {
         'lg:[--footer-svg-h:330px] lg:[--footer-svg-bottom:-50px] lg:[--footer-blur-h:56px]',
       ].join(' ')}
     >
-      {/* Blueprint fill — revealed through the wordmark so it reads as drawn on graph paper */}
-      <div className="absolute inset-0" style={{ background: 'var(--accent-brand-soft)' }} />
-      <div className="drafting-grid absolute inset-0" />
-      <div className="hatch absolute inset-0 opacity-30" />
-      <div
+      {/* Plotted region — blueprint fill + wordmark, wiped in left→right like a pen plotter */}
+      <motion.div
         className="absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(130% 150% at 12% 100%, var(--accent-brand-soft), transparent 55%)',
-        }}
-      />
-
-      <svg
-        viewBox="0 0 1000 300"
-        preserveAspectRatio="xMidYMax meet"
-        className="absolute inset-x-0 w-full"
-        style={{
-          bottom: 'var(--footer-svg-bottom)',
-          height: 'var(--footer-svg-h)',
-          overflow: 'visible',
-        }}
-        aria-hidden="true"
+        initial={{ clipPath: 'inset(0% 100% 0% 0%)' }}
+        animate={{ clipPath: revealed ? 'inset(0% 0% 0% 0%)' : 'inset(0% 100% 0% 0%)' }}
+        transition={{ duration: drawDuration, ease: 'easeInOut' }}
       >
-        <defs>
-          {/* Mask: white=show background, black=show the blueprint fill through */}
-          <mask id="footer-bg-mask">
-            {/* Cover far beyond viewBox so overflow:visible areas are also masked */}
-            <rect x="-2000" y="-500" width="5000" height="1500" fill="white" />
-            <text
-              x="0"
-              y="278"
-              textAnchor="start"
-              fontSize="350"
-              fontWeight="700"
-              textLength="1000"
-              lengthAdjust="spacingAndGlyphs"
-              fill="black"
-              style={{ fontFamily: 'var(--font-space-grotesk), sans-serif' }}
-            >
-              hieu.le
-            </text>
-          </mask>
-        </defs>
-
-        {/* Rect covering entire footer (incl. overflow areas), text-shaped holes reveal fill */}
-        <rect
-          x="-2000"
-          y="-500"
-          width="5000"
-          height="1500"
-          fill="var(--background)"
-          mask="url(#footer-bg-mask)"
+        {/* Blueprint fill revealed through the wordmark */}
+        <div className="absolute inset-0" style={{ background: 'var(--accent-brand-soft)' }} />
+        <div className="drafting-grid absolute inset-0" />
+        <div className="hatch absolute inset-0 opacity-30" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(130% 150% at 12% 100%, var(--accent-brand-soft), transparent 55%)',
+          }}
         />
 
-        {/* Stroke outline on top */}
-        <text
-          x="0"
-          y="278"
-          textAnchor="start"
-          fill="none"
-          stroke="var(--layout-line)"
-          strokeWidth="0.7"
-          fontSize="350"
-          fontWeight="700"
-          textLength="1000"
-          lengthAdjust="spacingAndGlyphs"
-          style={{ fontFamily: 'var(--font-space-grotesk), sans-serif' }}
+        <svg
+          viewBox="0 0 1000 300"
+          preserveAspectRatio="xMidYMax meet"
+          className="absolute inset-x-0 w-full"
+          style={{
+            bottom: 'var(--footer-svg-bottom)',
+            height: 'var(--footer-svg-h)',
+            overflow: 'visible',
+          }}
+          aria-hidden="true"
         >
-          hieu.le
-        </text>
-      </svg>
+          <defs>
+            {/* Mask: white=show background, black=show the blueprint fill through */}
+            <mask id="footer-bg-mask">
+              <rect x="-2000" y="-500" width="5000" height="1500" fill="white" />
+              <text
+                x="0"
+                y="278"
+                textAnchor="start"
+                fontSize="350"
+                fontWeight="700"
+                textLength="1000"
+                lengthAdjust="spacingAndGlyphs"
+                fill="black"
+                style={{ fontFamily: 'var(--font-space-grotesk), sans-serif' }}
+              >
+                hieu.le
+              </text>
+            </mask>
+          </defs>
 
-      {/* Ruled bottom edge of the sheet — label row + tick graduations */}
+          {/* Rect covering entire footer, text-shaped holes reveal the fill */}
+          <rect
+            x="-2000"
+            y="-500"
+            width="5000"
+            height="1500"
+            fill="var(--background)"
+            mask="url(#footer-bg-mask)"
+          />
+
+          {/* Stroke outline on top */}
+          <text
+            x="0"
+            y="278"
+            textAnchor="start"
+            fill="none"
+            stroke="var(--layout-line)"
+            strokeWidth="0.7"
+            fontSize="350"
+            fontWeight="700"
+            textLength="1000"
+            lengthAdjust="spacingAndGlyphs"
+            style={{ fontFamily: 'var(--font-space-grotesk), sans-serif' }}
+          >
+            hieu.le
+          </text>
+        </svg>
+      </motion.div>
+
+      {/* Plotter pen — a glowing head sweeping across the drawing edge, then lifting off */}
+      {revealed && !reduced ? (
+        <motion.div
+          className="absolute top-0 bottom-0 w-px bg-accent-brand"
+          style={{ boxShadow: '0 0 12px var(--accent-brand)' }}
+          initial={{ left: '0%', opacity: 0 }}
+          animate={{ left: '100%', opacity: [0, 1, 1, 0] }}
+          transition={{
+            left: { duration: drawDuration, ease: 'easeInOut' },
+            opacity: { duration: drawDuration, ease: 'linear', times: [0, 0.06, 0.9, 1] },
+          }}
+        >
+          <span className="absolute -left-[3px] top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-accent-brand" />
+        </motion.div>
+      ) : null}
+
+      {/* Ruled top edge of the sheet — signature block (always visible) */}
       <div className="absolute inset-x-0 top-0 border-t border-[color:var(--layout-line)]">
         <div className="container-editorial page-gutter flex items-center justify-between py-2">
           <span className="font-mono text-[10px] tracking-[0.22em] text-muted-foreground uppercase">

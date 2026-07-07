@@ -10,11 +10,15 @@ import { Button } from './ui/button'
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
-// Directional slide — next media enters from the right, previous from the left
+// Directional slide — next media enters from the right, previous from the left.
+// The entering frame fades in ON TOP (zIndex 1) while the exiting frame stays
+// fully opaque (opacity 1) underneath. With each slide painting its own opaque
+// background, the page background never bleeds through mid-transition — which is
+// what caused the brightness flicker on dark images.
 const stageVariants = {
-  enter: (direction: number) => ({ x: direction * 56, opacity: 0, scale: 0.985 }),
-  center: { x: 0, opacity: 1, scale: 1 },
-  exit: (direction: number) => ({ x: direction * -56, opacity: 0, scale: 0.985 }),
+  enter: (direction: number) => ({ x: direction * 56, opacity: 0, scale: 0.985, zIndex: 1 }),
+  center: { x: 0, opacity: 1, scale: 1, zIndex: 1 },
+  exit: (direction: number) => ({ x: direction * -56, opacity: 1, scale: 0.985, zIndex: 0 }),
 }
 
 const stageTransition = {
@@ -130,8 +134,10 @@ export function ShowcaseViewer({
     active?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
   }, [activeIndex])
 
-  // Fetch AND decode neighboring images ahead of time so navigating never
-  // blocks on network or main-thread bitmap decoding mid-animation
+  // Fetch AND decode neighboring frames ahead of time so navigating never
+  // blocks on network or main-thread bitmap decoding mid-animation. For videos
+  // we warm the poster (the frame shown during the slide) so it never decodes
+  // on the main thread while the spring is animating.
   useEffect(() => {
     if (!project) return
     const total = project.media.length
@@ -140,9 +146,9 @@ export function ShowcaseViewer({
       project.media[(activeIndex - 1 + total) % total],
     ]
     for (const media of neighbors) {
-      if (media.type !== 'image') continue
+      const src = media.type === 'image' ? media.src : media.poster
       const img = new window.Image()
-      img.src = media.src
+      img.src = src
       img.decode?.().catch(() => {})
     }
   }, [project, activeIndex])
@@ -217,7 +223,7 @@ export function ShowcaseViewer({
         <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.div
             key={activeMedia.src}
-            className="absolute inset-0 p-3 sm:p-8"
+            className="absolute inset-0 bg-background p-3 sm:p-8"
             custom={direction}
             variants={stageVariants}
             initial="enter"

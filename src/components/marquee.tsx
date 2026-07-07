@@ -3,7 +3,7 @@ import { Fragment } from 'react'
 const items = [
   'Fullstack Developer',
   'Next.js',
-  'NestJS',
+  'Nest.JS',
   'TypeScript',
   'Real-time Data',
   'Product Engineering',
@@ -32,10 +32,7 @@ function MarqueeHalf() {
 
 export function Marquee() {
   return (
-    <div
-      aria-hidden="true"
-      className="border-y border-[color:var(--layout-line)] select-none"
-    >
+    <div aria-hidden="true" className="border-y border-[color:var(--layout-line)] select-none">
       {/* hatched cut-surface strips framing the title band */}
       <div className="hatch h-2.5 border-b border-[color:var(--layout-line)]" />
       <div className="overflow-hidden py-4 sm:py-5">
