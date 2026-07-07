@@ -165,6 +165,57 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* Technical-drawing scrollbar — a ruled/graduated track with a square slider block */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--foreground-muted) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 13px;
+  height: 13px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+  /* tick graduations every 8px, like a measuring rule */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--layout-line) 0,
+    var(--layout-line) 1px,
+    transparent 1px,
+    transparent 8px
+  );
+  border-left: 1px solid var(--layout-line);
+}
+
+::-webkit-scrollbar-track:horizontal {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--layout-line) 0,
+    var(--layout-line) 1px,
+    transparent 1px,
+    transparent 8px
+  );
+  border-left: 0;
+  border-top: 1px solid var(--layout-line);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--foreground-muted);
+  /* square corners; the bg-colored border insets the slider so the ruler shows around it */
+  border: 3px solid var(--background);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--accent-brand);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 body {
   background-color: var(--background);
   font-family: var(--font-geist-sans), system-ui, sans-serif;

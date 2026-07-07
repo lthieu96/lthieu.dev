@@ -1,4 +1,4 @@
-import { ShaderBackground } from '@/components/shader-background'
+import { CrossMark } from '@/components/cross-mark'
 
 export function Footer() {
   return (
@@ -12,19 +12,17 @@ export function Footer() {
         'lg:[--footer-svg-h:330px] lg:[--footer-svg-bottom:-50px] lg:[--footer-blur-h:56px]',
       ].join(' ')}
     >
-      {/* Shader as regular HTML element covering full footer */}
-      <div className="absolute inset-0">
-        <ShaderBackground
-          scale={0.6}
-          speed={1}
-          lightColorBack="#f7f6f0"
-          lightColorFront="#b7c9dd"
-          darkColorBack="#16293f"
-          darkColorFront="#5c88b4"
-          bgLight="#f7f6f0"
-          bgDark="#16293f"
-        />
-      </div>
+      {/* Blueprint fill — revealed through the wordmark so it reads as drawn on graph paper */}
+      <div className="absolute inset-0" style={{ background: 'var(--accent-brand-soft)' }} />
+      <div className="drafting-grid absolute inset-0" />
+      <div className="hatch absolute inset-0 opacity-30" />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(130% 150% at 12% 100%, var(--accent-brand-soft), transparent 55%)',
+        }}
+      />
 
       <svg
         viewBox="0 0 1000 300"
@@ -38,7 +36,7 @@ export function Footer() {
         aria-hidden="true"
       >
         <defs>
-          {/* Mask: white=show background, black=show shader through */}
+          {/* Mask: white=show background, black=show the blueprint fill through */}
           <mask id="footer-bg-mask">
             {/* Cover far beyond viewBox so overflow:visible areas are also masked */}
             <rect x="-2000" y="-500" width="5000" height="1500" fill="white" />
@@ -58,7 +56,7 @@ export function Footer() {
           </mask>
         </defs>
 
-        {/* Rect covering entire footer (incl. overflow areas), text-shaped holes reveal shader */}
+        {/* Rect covering entire footer (incl. overflow areas), text-shaped holes reveal fill */}
         <rect
           x="-2000"
           y="-500"
@@ -85,6 +83,36 @@ export function Footer() {
           hieu.le
         </text>
       </svg>
+
+      {/* Ruled bottom edge of the sheet — label row + tick graduations */}
+      <div className="absolute inset-x-0 top-0 border-t border-[color:var(--layout-line)]">
+        <div className="container-editorial page-gutter flex items-center justify-between py-2">
+          <span className="font-mono text-[10px] tracking-[0.22em] text-muted-foreground uppercase">
+            Signature block
+          </span>
+          <span className="hidden font-mono text-[10px] tracking-[0.22em] text-muted-foreground uppercase sm:inline">
+            Scale 1:1 · Not to spec
+          </span>
+          <span className="font-mono text-[10px] tracking-[0.22em] text-muted-foreground uppercase">
+            DWG LTH-2026-01
+          </span>
+        </div>
+        <div
+          className="h-2 w-full border-t border-[color:var(--layout-line)]"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(to right, var(--layout-line) 0, var(--layout-line) 1px, transparent 1px, transparent 22px)',
+          }}
+        />
+      </div>
+
+      {/* Registration crosshairs at the sheet corners */}
+      <div className="absolute inset-0 text-foreground/30">
+        <CrossMark className="top-12 left-2.5" />
+        <CrossMark className="top-12 right-2.5" />
+        <CrossMark className="bottom-2.5 left-2.5" />
+        <CrossMark className="right-2.5 bottom-2.5" />
+      </div>
 
       {/* Gradient fade at bottom */}
       <div

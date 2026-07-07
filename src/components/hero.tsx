@@ -165,10 +165,10 @@ export function Hero() {
       </div>
 
       <motion.div
-        className="flex items-end justify-between gap-6 border-t border-[color:var(--layout-line)] pt-5"
+        className="flex items-center justify-between border-t border-[color:var(--layout-line)] pt-5 font-mono text-[11px] tracking-[0.18em] text-muted-foreground uppercase"
         {...fade(1)}
       >
-        <div className="flex items-center gap-2.5 font-mono text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+        <div className="flex items-center gap-2.5">
           <span className="relative flex size-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-brand opacity-60" />
             <span className="relative inline-flex size-2 rounded-full bg-accent-brand" />
@@ -176,10 +176,17 @@ export function Hero() {
           Open to opportunities
         </div>
 
-        <div className="hidden h-5 overflow-hidden md:block">
+        <div className="hidden md:block">
           <TextFlip
-            className="font-mono text-[11px] leading-5 tracking-[0.18em] text-muted-foreground uppercase"
+            as={motion.span}
+            className="inline-block text-foreground/80"
             interval={2.8}
+            transition={{ duration: 0.4, ease: EASE }}
+            variants={{
+              initial: { y: -6, opacity: 0 },
+              animate: { y: 0, opacity: 1 },
+              exit: { y: 6, opacity: 0 },
+            }}
           >
             <span>Next.js · NestJS · TypeScript</span>
             <span>Real-time data at scale</span>
@@ -189,7 +196,7 @@ export function Hero() {
         </div>
 
         <motion.span
-          className="font-mono text-[11px] tracking-[0.18em] text-muted-foreground uppercase"
+          className="flex items-center gap-1.5"
           animate={{ y: [0, 4, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
         >
