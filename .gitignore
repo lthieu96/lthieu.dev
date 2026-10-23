@@ -42,3 +42,8 @@ next-env.d.ts
 
 # redis dump (dev artifact, should never be committed)
 *.rdb
+
+# vite / tanstack start
+/dist/
+.content-collections/
+.tanstack/

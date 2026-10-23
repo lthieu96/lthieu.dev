@@ -1,0 +1,258 @@
+@import "tailwindcss";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+@import "@fontsource-variable/newsreader/opsz-italic.css";
+
+/* Signature only. "Sign Style DEMO" by Redy Studio, subset to A–Z, a–z and space. */
+@font-face {
+  font-family: "Sign Style";
+  src: url("./fonts/sign-style.woff") format("woff");
+  font-display: swap;
+}
+
+/* Screens narrower than the A4 resume sheet. Screen only, so printing keeps the A4 layout. */
+@custom-variant narrow-screen (@media screen and (max-width: 860px));
+
+/* Design tokens, mirrored from the variables in design/portfolio.pen. Dark is the default;
+   light overrides the same names below. Shaders read these at runtime too. */
+@theme {
+  --color-bg: #111111;
+  --color-fg: #ededed;
+  --color-muted: #8f8f8f;
+  /* Meta text. #7C7C7C is the darkest grey that still passes AA on #111. */
+  --color-subtle: #7c7c7c;
+  --color-prose: #c4c4c4;
+  --color-line: rgb(255 255 255 / 0.08);
+  /* Hairline around images and cards. */
+  --color-edge: rgb(255 255 255 / 0.1);
+  --color-well: #191919;
+  --color-hover: #202020;
+  --color-card: #181818;
+  --color-card-shadow: rgb(0 0 0 / 0.63);
+  /* App-icon tiles: soft drop shadow under the tile (see .app-icon). */
+  --color-icon-shadow: rgb(0 0 0 / 0.55);
+  --color-icon-shadow-soft: rgb(0 0 0 / 0.35);
+  /* Case-study media frame. */
+  --color-media: #141414;
+  --color-media-glow: #1a2420;
+  /* Only for things you can click. */
+  --color-accent: #8cc4f2;
+  /* The three lanes in the Sway request-budget figure. */
+  --color-lane-1: #8cc4f2;
+  --color-lane-2: #5e7a92;
+  --color-lane-3: #3a4a58;
+
+  /* Type scale, the "Type scale" frame in design/portfolio.pen. Each size carries its
+     line-height (and tracking for headings), so never add a /[leading] modifier. */
+  --text-h1: 28px;
+  --text-h1--line-height: 1.2;
+  --text-h1--letter-spacing: -0.6px;
+  --text-h2: 18px;
+  --text-h2--line-height: 1.35;
+  --text-h2--letter-spacing: -0.3px;
+  --text-quote: 17px;
+  --text-quote--line-height: 1.5;
+  --text-body: 15px;
+  --text-body--line-height: 1.7;
+  --text-list: 14px;
+  --text-list--line-height: 1.6;
+  --text-ui: 13px;
+  --text-ui--line-height: 1.6;
+  --text-meta: 12px;
+  --text-meta--line-height: 1.5;
+
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --font-serif: "Newsreader Variable", ui-serif, Georgia, serif;
+  --font-hand: "Sign Style", cursive;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Set on <html> by the inline script in __root.tsx, before first paint. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #fcfcfb;
+  --color-fg: #1a1a1a;
+  --color-muted: #6f6f6f;
+  --color-subtle: #737373;
+  --color-prose: #3d3d3d;
+  --color-line: rgb(0 0 0 / 0.07);
+  --color-edge: rgb(0 0 0 / 0.08);
+  --color-well: #f3f3f1;
+  --color-hover: #ebebe8;
+  --color-card: #ffffff;
+  --color-card-shadow: rgb(0 0 0 / 0.12);
+  --color-icon-shadow: rgb(0 0 0 / 0.14);
+  --color-icon-shadow-soft: rgb(0 0 0 / 0.1);
+  --color-media: #f3f3f1;
+  --color-media-glow: #e6efea;
+  --color-accent: #2f6fb0;
+  --color-lane-1: #2f6fb0;
+  --color-lane-2: #86a6c4;
+  --color-lane-3: #c9d6e2;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* Thin thumb, no track. scrollbar-color inherits, so code blocks pick it up too. The gutter
+       stays reserved so short pages (404) don't shift sideways against long ones. */
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-fg) 20%, transparent) transparent;
+    scrollbar-gutter: stable;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 28%, transparent);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+}
+
+/* App icons, iOS style: squircle, a hairline rim that's brighter on top (like light catching the
+   glass edge), a faint top sheen, and a soft shadow underneath. The overlay sits in ::after because
+   an <img> paints over its own inset shadows. Set the size on the element. */
+@layer components {
+  .app-icon {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    border-radius: 22.5%;
+    box-shadow:
+      0 0.5px 1px var(--color-icon-shadow),
+      0 2px 6px -1px var(--color-icon-shadow-soft);
+  }
+
+  @supports (corner-shape: squircle) {
+    .app-icon {
+      border-radius: 30%;
+      corner-shape: squircle;
+    }
+  }
+
+  .app-icon > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    corner-shape: inherit;
+  }
+
+  .app-icon::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    corner-shape: inherit;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0) 42%);
+    box-shadow:
+      inset 0 0.75px 0 rgb(255 255 255 / 0.4),
+      inset 0 0 0 0.5px rgb(0 0 0 / 0.16);
+  }
+}
+
+/* Entrance: each block rises 8px out of a 4px blur, 90ms apart. Set --i on the element. */
+@keyframes enter {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+    filter: blur(4px);
+  }
+}
+
+/* Footer signature: each stroke draws from its start (see signature.tsx). */
+@keyframes sign {
+  from {
+    stroke-dashoffset: 1.05;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@utility enter {
+  animation: enter 560ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+
+  /* The finished animation leaves `filter: blur(0)`, and Chrome drops links under any filter
+     when it prints. Without this the resume PDF has no clickable links. */
+  @media print {
+    animation: none;
+  }
+}
+
+/* Page-to-page crossfade (router sets defaultViewTransition). */
+::view-transition-group(root) {
+  animation-duration: 200ms;
+  animation-timing-function: var(--ease-out);
+}
+
+/* The app icon grows out of the one clicked in the intro (see flyIcon in product-mention.tsx). */
+::view-transition-group(app-icon) {
+  animation-duration: 250ms;
+  animation-timing-function: var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter {
+    animation: none;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
+  }
+}
+
+/* Code blocks from rehype-pretty-code. The frame is drawn by <CodeBlock>. */
+[data-rehype-pretty-code-figure] pre {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 21px;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-rehype-pretty-code-figure] code {
+  display: grid;
+}
+
+/* Two shiki themes are baked into every token; pick the one for the current theme. */
+[data-rehype-pretty-code-figure] code span {
+  color: var(--shiki-dark);
+}
+
+:root[data-theme="light"] [data-rehype-pretty-code-figure] code span {
+  color: var(--shiki-light);
+}

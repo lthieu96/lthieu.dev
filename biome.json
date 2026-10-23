@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.2/schema.json",
   "assist": {
     "enabled": true,
     "actions": {
@@ -26,7 +26,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "style": {
         "useImportType": "off"
       },
@@ -37,7 +37,9 @@
   },
   "overrides": [
     {
-      "includes": ["**/*.tsx"],
+      "includes": [
+        "**/*.tsx"
+      ],
       "linter": {
         "rules": {
           "suspicious": {
@@ -54,19 +56,6 @@
           }
         }
       }
-    },
-    {
-      "includes": ["**/common/decorators/cache-method.decorator.ts"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noExplicitAny": "off"
-          },
-          "style": {
-            "noNonNullAssertion": "off"
-          }
-        }
-      }
     }
   ],
   "files": {
@@ -79,7 +68,15 @@
       "!**/.expo",
       "!**/.turbo",
       "!**/ios",
-      "!**/android"
+      "!**/android",
+      "!**/routeTree.gen.ts",
+      "!design",
+      "!**/.content-collections"
     ]
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
   }
 }

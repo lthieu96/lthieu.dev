@@ -1,180 +1,139 @@
-'use client'
-
-import { motion } from 'motion/react'
+import { Popover } from '@base-ui/react/popover'
+import NumberFlow, { NumberFlowGroup } from '@number-flow/react'
 import { useEffect, useState } from 'react'
-import { CrossMark } from '@/components/cross-mark'
+import { type Credit, lookedAt, madeWith, reading } from '@/data/credits'
+import { site } from '@/data/site'
+import { external } from '@/lib/external'
+import { Arrow, delay } from './layout'
+import { AnimatedSignature } from './signature'
 
-export function Footer() {
-  const [revealed, setRevealed] = useState(false)
-  const [reduced, setReduced] = useState(false)
+const clockFormat = new Intl.DateTimeFormat('en-GB', {
+  timeZone: site.timeZone,
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+})
+
+function saigonTime() {
+  const parts = clockFormat.formatToParts(new Date())
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value)
+  return { h: get('hour'), m: get('minute') }
+}
+
+/** Saigon time, ticking. Blank until mounted, because the prerendered HTML can't know the time. */
+function Clock() {
+  const [time, setTime] = useState<{ h: number; m: number } | null>(null)
 
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setReduced(true)
-      setRevealed(true)
-      return
-    }
-    // Trigger the plot once the footer reveal enters view (near the document bottom)
-    const check = () => {
-      const scrollBottom = window.innerHeight + window.scrollY
-      const docHeight = document.documentElement.scrollHeight
-      if (docHeight - scrollBottom < 300) setRevealed(true)
-    }
-    check()
-    window.addEventListener('scroll', check, { passive: true })
-    window.addEventListener('resize', check)
-    return () => {
-      window.removeEventListener('scroll', check)
-      window.removeEventListener('resize', check)
-    }
+    setTime(saigonTime())
+    const id = setInterval(() => setTime(saigonTime()), 10_000)
+    return () => clearInterval(id)
   }, [])
 
-  const drawDuration = reduced ? 0 : 1.8
+  // inline-block + nowrap: hours and minutes are separate NumberFlows, and a narrow footer
+  // would otherwise break the line between them ("19:" / "33").
+  if (!time) return <span className="inline-block whitespace-nowrap tabular-nums">--:--</span>
+  const two = { minimumIntegerDigits: 2 }
+  return (
+    <NumberFlowGroup>
+      <span className="inline-block whitespace-nowrap tabular-nums">
+        <NumberFlow value={time.h} format={two} />:
+        <NumberFlow value={time.m} format={two} digits={{ 1: { max: 5 } }} />
+      </span>
+    </NumberFlowGroup>
+  )
+}
 
+const updated = new Date(site.updated).toLocaleDateString('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+})
+
+function CreditList({ title, items }: { title: string; items: Credit[] }) {
+  return (
+    <section className="flex flex-col gap-1.5">
+      <h3 className="font-mono text-meta text-subtle">{title}</h3>
+      <ul className="flex flex-col gap-1">
+        {items.map((c) => (
+          <li key={c.label} className="flex items-baseline justify-between gap-4 text-meta">
+            {c.href ? (
+              <a href={c.href} className="group text-fg hover:underline" {...external(c.href)}>
+                {/* A no-break space keeps the arrow with the last word when the title wraps. */}
+                {c.label} <Arrow dir="↗" />
+              </a>
+            ) : (
+              <span className="text-fg">{c.label}</span>
+            )}
+            <span className="shrink-0 text-right text-subtle">{c.note}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/** "built <commit>", which opens what the site was built with and the sites and reading behind it. */
+function BuildCredits() {
+  const dev = __BUILD_COMMIT__ === 'dev'
+  return (
+    <Popover.Root>
+      <Popover.Trigger className="cursor-pointer underline decoration-subtle/50 decoration-dotted underline-offset-[3px] transition-colors duration-150 hover:text-fg data-popup-open:text-fg">
+        built {__BUILD_COMMIT__}
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Positioner side="top" align="start" sideOffset={10} collisionPadding={16}>
+          <Popover.Popup className="flex max-h-[min(70vh,520px)] w-[360px] max-w-(--available-width) origin-(--transform-origin) flex-col gap-4 overflow-y-auto rounded-[14px] border border-edge bg-card p-4 shadow-[0_18px_48px_var(--color-card-shadow)] outline-none transition-[opacity,scale] duration-150 ease-(--ease-out) [scrollbar-width:thin] data-ending-style:scale-[0.97] data-ending-style:opacity-0 data-starting-style:scale-[0.97] data-starting-style:opacity-0">
+            <div className="flex flex-col gap-1">
+              <Popover.Title className="text-ui font-medium text-fg">
+                How this site was made
+              </Popover.Title>
+              <Popover.Description className="text-meta text-muted">
+                TanStack Start, React 19, Tailwind v4 and custom WebGL, built together with Claude
+                Code.{' '}
+                {!dev && (
+                  <a
+                    href={`${site.repo}/commit/${__BUILD_COMMIT__}`}
+                    className="group text-accent hover:underline"
+                    {...external(site.repo)}
+                  >
+                    Commit {__BUILD_COMMIT__} <Arrow dir="↗" />
+                  </a>
+                )}
+              </Popover.Description>
+            </div>
+            <CreditList title="Looked at" items={lookedAt} />
+            <CreditList title="Read" items={reading} />
+            <CreditList title="Made with" items={madeWith} />
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
+  )
+}
+
+export function Footer({ i }: { i: number }) {
   return (
     <footer
-      aria-hidden="true"
-      className={[
-        'fixed bottom-0 left-0 right-0 z-0 overflow-hidden bg-background select-none',
-        'h-[150px] sm:h-[210px] lg:h-[300px]',
-        '[--footer-svg-h:170px] [--footer-svg-bottom:-20px] [--footer-blur-h:36px]',
-        'sm:[--footer-svg-h:220px] sm:[--footer-svg-bottom:-35px] sm:[--footer-blur-h:44px]',
-        'lg:[--footer-svg-h:330px] lg:[--footer-svg-bottom:-50px] lg:[--footer-blur-h:56px]',
-      ].join(' ')}
+      className="enter flex items-end justify-between gap-6 border-line border-t pt-6 pr-1.5"
+      style={delay(i)}
     >
-      {/* Plotted region — blueprint fill + wordmark, wiped in left→right like a pen plotter */}
-      <motion.div
-        className="absolute inset-0"
-        initial={{ clipPath: 'inset(0% 100% 0% 0%)' }}
-        animate={{ clipPath: revealed ? 'inset(0% 0% 0% 0%)' : 'inset(0% 100% 0% 0%)' }}
-        transition={{ duration: drawDuration, ease: 'easeInOut' }}
-      >
-        {/* Blueprint fill revealed through the wordmark */}
-        <div className="absolute inset-0" style={{ background: 'var(--accent-brand-soft)' }} />
-        <div className="drafting-grid absolute inset-0" />
-        <div className="hatch absolute inset-0 opacity-30" />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(130% 150% at 12% 100%, var(--accent-brand-soft), transparent 55%)',
-          }}
-        />
-
-        <svg
-          viewBox="0 0 1000 300"
-          preserveAspectRatio="xMidYMax meet"
-          className="absolute inset-x-0 w-full"
-          style={{
-            bottom: 'var(--footer-svg-bottom)',
-            height: 'var(--footer-svg-h)',
-            overflow: 'visible',
-          }}
-          aria-hidden="true"
-        >
-          <defs>
-            {/* Mask: white=show background, black=show the blueprint fill through */}
-            <mask id="footer-bg-mask">
-              <rect x="-2000" y="-500" width="5000" height="1500" fill="white" />
-              <text
-                x="0"
-                y="278"
-                textAnchor="start"
-                fontSize="350"
-                fontWeight="700"
-                textLength="1000"
-                lengthAdjust="spacingAndGlyphs"
-                fill="black"
-                style={{ fontFamily: 'var(--font-space-grotesk), sans-serif' }}
-              >
-                hieu.le
-              </text>
-            </mask>
-          </defs>
-
-          {/* Rect covering entire footer, text-shaped holes reveal the fill */}
-          <rect
-            x="-2000"
-            y="-500"
-            width="5000"
-            height="1500"
-            fill="var(--background)"
-            mask="url(#footer-bg-mask)"
-          />
-
-          {/* Stroke outline on top */}
-          <text
-            x="0"
-            y="278"
-            textAnchor="start"
-            fill="none"
-            stroke="var(--layout-line)"
-            strokeWidth="0.7"
-            fontSize="350"
-            fontWeight="700"
-            textLength="1000"
-            lengthAdjust="spacingAndGlyphs"
-            style={{ fontFamily: 'var(--font-space-grotesk), sans-serif' }}
-          >
-            hieu.le
-          </text>
-        </svg>
-      </motion.div>
-
-      {/* Plotter pen — a glowing head sweeping across the drawing edge, then lifting off */}
-      {revealed && !reduced ? (
-        <motion.div
-          className="absolute top-0 bottom-0 w-px bg-accent-brand"
-          style={{ boxShadow: '0 0 12px var(--accent-brand)' }}
-          initial={{ left: '0%', opacity: 0 }}
-          animate={{ left: '100%', opacity: [0, 1, 1, 0] }}
-          transition={{
-            left: { duration: drawDuration, ease: 'easeInOut' },
-            opacity: { duration: drawDuration, ease: 'linear', times: [0, 0.06, 0.9, 1] },
-          }}
-        >
-          <span className="absolute -left-[3px] top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-accent-brand" />
-        </motion.div>
-      ) : null}
-
-      {/* Ruled top edge of the sheet — signature block (always visible) */}
-      <div className="absolute inset-x-0 top-0 border-t border-[color:var(--layout-line)]">
-        <div className="container-editorial page-gutter flex items-center justify-between py-2">
-          <span className="font-mono text-[10px] tracking-[0.22em] text-muted-foreground uppercase">
-            Signature block
-          </span>
-          <span className="hidden font-mono text-[10px] tracking-[0.22em] text-muted-foreground uppercase sm:inline">
-            Scale 1:1 · Not to spec
-          </span>
-          <span className="font-mono text-[10px] tracking-[0.22em] text-muted-foreground uppercase">
-            DWG LTH-2026-01
-          </span>
-        </div>
-        <div
-          className="h-2 w-full border-t border-[color:var(--layout-line)]"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(to right, var(--layout-line) 0, var(--layout-line) 1px, transparent 1px, transparent 22px)',
-          }}
-        />
+      <div className="flex flex-col gap-1 font-mono text-meta text-subtle">
+        <p>Now: {site.now}</p>
+        <p>
+          Last seen in {site.city},{' '}
+          {/* The full stop rides with the time: Safari would otherwise wrap it onto its own line. */}
+          <span className="whitespace-nowrap">
+            <Clock />.
+          </span>{' '}
+          Updated {updated}.
+        </p>
+        <p>
+          <BuildCredits />
+        </p>
       </div>
-
-      {/* Registration crosshairs at the sheet corners */}
-      <div className="absolute inset-0 text-foreground/30">
-        <CrossMark className="top-12 left-2.5" />
-        <CrossMark className="top-12 right-2.5" />
-        <CrossMark className="bottom-2.5 left-2.5" />
-        <CrossMark className="right-2.5 bottom-2.5" />
-      </div>
-
-      {/* Gradient fade at bottom */}
-      <div
-        className="absolute inset-x-0 bottom-0 pointer-events-none"
-        style={{
-          height: 'var(--footer-blur-h)',
-          background: 'linear-gradient(to top, var(--background) 30%, transparent)',
-        }}
-      />
+      <AnimatedSignature />
     </footer>
   )
 }

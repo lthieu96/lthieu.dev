@@ -1,0 +1,34 @@
+---
+title: One speed limit, many callers
+summary: Sharing one API rate limit so the important calls go first.
+tag: Backend
+draft: true
+featured: true
+order: 1
+---
+
+Most APIs only let you call them so many times a minute. That's fine when one part of your app is calling. It gets tricky when everything is: people placing orders, the app refreshing prices, and background jobs catching up.
+
+If they all share one budget and nobody's in charge, the loudest caller wins. Usually that's a background job, and the person tapping a button waits.
+
+## Give every caller a lane
+
+The fix is a small service in the middle. Every request goes through it. It knows the total budget, splits it into lanes, and lets the most important lane go first.
+
+```ts title="budget.ts"
+// requests per minute, split by priority
+const lanes = {
+  user:       600,  // people tapping buttons
+  prices:     400,  // keeping screens fresh
+  background: 200,  // can wait
+};
+
+async function call(lane, request) {
+  await take(lane);  // waits only if this lane is empty
+  return request();
+}
+```
+
+When a lane runs dry, only that lane waits. People tapping buttons never sit behind a background job again.
+
+<Callout>The limit didn't change. Who waits did.</Callout>

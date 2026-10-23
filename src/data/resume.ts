@@ -1,99 +1,75 @@
-export interface ExperienceRole {
-  id: string
-  company: string
-  companyUrl?: string
-  role: string
-  type?: string
-  period: string
-  bullets: string[]
-  skills: string[]
-  current?: boolean
-}
+// The one-page resume at /resume. It prints to A4. Keep it to one page.
+// Text supports **bold** (use it for metrics: recruiters skim for them) and [label](url) links.
+import { site, socialHref } from './site'
 
-export const experienceRoles: ExperienceRole[] = [
-  {
-    id: 'kvy-software-engineer',
-    company: 'KVY Technology',
-    companyUrl: 'https://kvytechnology.com/',
-    role: 'Software Engineer',
-    type: 'Full-time',
-    period: '2025 — Present',
-    current: true,
-    bullets: [
-      'Designed and implemented the Cerebro web application with Next.js and backend services with Node.js.',
-      'Supported product growth reaching 200,000+ users and 7,000+ daily active users.',
-      'Worked on portfolio management features and real-time crypto data handling.',
-      'Built internal admin and data collection systems across 6 on-chain platforms and 8 major exchanges.',
-    ],
-    skills: ['Next.js', 'NestJS', 'TypeScript', 'MongoDB', 'Redis', 'Real-time Data'],
+export const resume = {
+  name: site.name,
+  headline: `${site.role} · Ho Chi Minh City`,
+  contact: [
+    { label: site.email, href: `mailto:${site.email}` },
+    { label: 'github.com/lthieu96', href: socialHref('GitHub') },
+    { label: 'linkedin.com/in/lthieu96', href: socialHref('LinkedIn') },
+    { label: 'lthieu.dev', href: site.url },
+  ],
+  summary:
+    'Full-stack developer with 3+ years of experience. I build products end to end: web apps, mobile apps and the backend that keeps them running, most recently for a crypto app with **200K+ users**.',
+  experience: [
+    {
+      title: 'KVY Technology · Software Engineer',
+      when: '2025 – now',
+      bullets: [],
+      // Cerebro first: it has the numbers. Sway is the current work.
+      groups: [
+        {
+          title: 'Cerebro ([cerebro.xyz](https://cerebro.xyz)) · crypto portfolio tracker',
+          when: '2025 – 2026',
+          bullets: [
+            'Built the Next.js web app and Node.js backend as the product grew to **200K+ users** and **7K+ daily active users**.',
+            'Built data collection across **8 exchanges** and **6 on-chain platforms**, plus the admin dashboard the team used to watch it.',
+          ],
+        },
+        {
+          title: 'Sway ([sway.fun](https://sway.fun)) · narrative trading app',
+          when: '2026 – now',
+          bullets: [
+            "Built a Rust service that shares the exchange's request limit so trades always go first.",
+            'Wrote the Solidity contract that pays fee rewards on Arbitrum, plus the backend that batches and checks payouts.',
+            'Split completed-trade matching into its own service with lag alerts; built notifications and app screens in Expo.',
+          ],
+        },
+      ],
+    },
+    {
+      title: 'Madeezi · Freelance Full-Stack Developer',
+      when: '2025 – 2026',
+      bullets: [
+        'Built GreenMaster Go, an end-to-end ERP for **3,800+ customers** and **200 technicians**: web admin, Expo phone app and a Rails backend that replaced paper reports.',
+      ],
+    },
+    {
+      title: 'BenKon · Software Engineer',
+      when: '2024 – 2025',
+      bullets: [
+        'Re-architected the admin dashboard, cutting page load time by **30%**.',
+        'Shipped the BenKon App and Surface App for device control and meeting rooms; built a CMS, i18n system and icon library.',
+      ],
+    },
+    {
+      title: 'BenKon · Front-end Developer Intern',
+      when: '2023 – 2024',
+      bullets: [
+        'Built an interactive floor-plan and equipment layout editor in React and SVG, solo.',
+      ],
+    },
+  ],
+  skills: [
+    { label: 'Frontend', value: 'React, Next.js, React Native / Expo' },
+    { label: 'Backend', value: 'Node.js, NestJS, Express, Rails, Rust' },
+    { label: 'Data', value: 'MongoDB, Redis, PostgreSQL' },
+    { label: 'Infra', value: 'Docker, GCP, GitHub Actions, Sentry' },
+  ],
+  education: {
+    title: 'University of Information Technology, VNUHCM · Software Engineering, Very Good',
+    when: '2019 – 2025',
   },
-  {
-    id: 'benkon-software-engineer',
-    company: 'BenKon',
-    companyUrl: 'https://www.linkedin.com/company/benkon/posts',
-    role: 'Software Engineer',
-    type: 'Full-time',
-    period: '2024 — 2025',
-    bullets: [
-      'Developed admin dashboard features and helped re-architect parts of the system, reducing page load time by 30%.',
-      'Delivered and improved mobile and tablet applications for device control and meeting room management.',
-      'Built internal platforms such as a CMS, i18n system, and icon library to improve consistency and developer productivity.',
-    ],
-    skills: ['Admin Dashboard', 'CMS', 'i18n', 'Mobile Apps', 'Tablet Apps'],
-  },
-  {
-    id: 'benkon-intern',
-    company: 'BenKon',
-    companyUrl: 'https://www.linkedin.com/company/benkon/posts',
-    role: 'Front-end Developer Intern',
-    type: 'Internship',
-    period: '2023 — 2024',
-    bullets: [
-      'Built an interactive floor plan and equipment layout editor using React, Node.js, and SVG.',
-      'Owned the project end to end as a solo developer.',
-    ],
-    skills: ['React', 'Node.js', 'SVG', 'Editor UX'],
-  },
-]
-
-export const sideProjects: ExperienceRole[] = [
-  {
-    id: 'greenmaster-go',
-    company: 'GreenMaster Go',
-    role: 'ERP platform for field operations',
-    period: 'Selected work',
-    bullets: [
-      'Built an ERP-style product to help digitize workflows for more than 3,800 customers and 200 technicians.',
-      'Worked across web and mobile surfaces to support operational flows used in day-to-day field work.',
-    ],
-    skills: ['ERP', 'React', 'React Native', 'Rails', 'PostgreSQL'],
-  },
-  {
-    id: 'express-boilerplate',
-    company: 'Express Boilerplate',
-    companyUrl: 'https://github.com/lthieu96/express-typescript',
-    role: 'Reusable REST API starter',
-    period: 'Open source',
-    bullets: [
-      'Created a reusable backend starter focused on authentication, API structure, and practical project setup.',
-      'Used it as a foundation for learning and for speeding up small service prototypes.',
-    ],
-    skills: ['Express.js', 'TypeScript', 'MongoDB', 'JWT', 'OAuth'],
-  },
-]
-
-export const education = {
-  school: 'University of Information Technology — VNUHCM',
-  period: '2019 — 2025',
-  major: 'Software Engineering',
-  classification: 'Very Good',
-}
-
-export const contact = {
-  email: 'lthieu9601@gmail.com',
-  phone: '0961 500 817',
-  phoneHref: 'tel:+84961500817',
-  location: 'Ho Chi Minh City, Viet Nam',
-  github: 'https://github.com/lthieu96',
-  linkedin: 'https://www.linkedin.com/in/l%C3%AA-trung-hi%E1%BA%BFu-20915b29a/',
 }

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lthieu.dev/sitemap.xml
