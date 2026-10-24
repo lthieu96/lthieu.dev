@@ -4,18 +4,24 @@ import { DitherField } from '@/components/shaders/dither-field'
 import type { CaseStudy, CaseStudyMedia, CaseStudySection } from '@/data/projects'
 import { external } from '@/lib/external'
 
+/**
+ * Facts as label-over-value items that flow left to right. Each item keeps its value on one line
+ * and wraps as a whole, so a long value never breaks mid-phrase in a narrow column. Phones get a
+ * plain two-column grid instead.
+ */
 export function MetaTable({ meta, links }: Pick<CaseStudy, 'meta' | 'links'>) {
+  const item = 'flex flex-col gap-0.5 sm:whitespace-nowrap'
   return (
-    <dl className="text-ui">
+    <dl className="grid grid-cols-2 gap-x-6 gap-y-4 border-line border-t pt-5 text-ui sm:flex sm:flex-wrap sm:gap-x-10">
       {meta.map((m) => (
-        <div key={m.label} className="flex gap-6 border-line border-t py-[9px]">
-          <dt className="w-[110px] shrink-0 text-subtle max-sm:w-20">{m.label}</dt>
-          <dd className="text-fg">{m.value}</dd>
+        <div key={m.label} className={item}>
+          <dt className="text-meta text-subtle">{m.label}</dt>
+          <dd className="text-fg tabular-nums">{m.value}</dd>
         </div>
       ))}
       {links && links.length > 0 && (
-        <div className="flex gap-6 border-line border-t py-[9px]">
-          <dt className="w-[110px] shrink-0 text-subtle max-sm:w-20">Links</dt>
+        <div className={`${item} col-span-full`}>
+          <dt className="text-meta text-subtle">Links</dt>
           <dd className="flex flex-wrap gap-x-2 text-accent">
             {links.map((l, i) => (
               <span key={l.href}>
@@ -67,7 +73,7 @@ export function Media({ media }: { media: CaseStudyMedia }) {
         </div>
       ) : (
         <div
-          className={`${frame} relative isolate flex justify-center gap-6 bg-media px-6 py-11 max-sm:gap-3 max-sm:px-3`}
+          className={`${frame} relative isolate flex items-center justify-center gap-6 bg-media px-6 py-11 max-sm:gap-3 max-sm:px-3`}
         >
           <DitherField
             colHalf={0}
@@ -76,8 +82,9 @@ export function Media({ media }: { media: CaseStudyMedia }) {
             background="media"
             className="absolute inset-0 -z-10"
           />
-          {media.slots.map((slot) =>
+          {media.slots.map((slot, i) =>
             slot.src ? (
+              // The middle phone leads; the ones beside it sit smaller.
               <video
                 key={slot.label}
                 src={slot.src}
@@ -87,7 +94,7 @@ export function Media({ media }: { media: CaseStudyMedia }) {
                 muted
                 loop
                 playsInline
-                className="aspect-[1179/2556] w-[200px] rounded-[28px] border border-edge object-cover"
+                className={`aspect-[1179/2556] min-w-0 rounded-[28px] border border-edge object-cover max-sm:rounded-2xl ${i === (media.slots.length - 1) / 2 ? 'w-[200px]' : 'w-[150px]'}`}
               />
             ) : (
               <div

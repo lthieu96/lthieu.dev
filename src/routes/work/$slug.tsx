@@ -47,8 +47,10 @@ function CaseStudyPage() {
         </div>
       </Page>
 
-      <div className="enter" style={delay(3)}>
-        <Media media={study.media} />
+      <div className="enter flex flex-col gap-10" style={delay(3)}>
+        {[study.media].flat().map((m) => (
+          <Media key={m.kind === 'image' ? m.src : m.slots[0]?.label} media={m} />
+        ))}
       </div>
 
       <div className="enter mx-auto w-full max-w-[640px] px-5 pt-16" style={delay(4)}>

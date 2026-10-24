@@ -21,3 +21,11 @@ darkened so the site's dither renders the lettering solid:
     ffmpeg -f lavfi -i color=white:s=3544x1772 -i bk-benkon-official-logo.png -filter_complex \
       "[0][1]overlay=format=auto,crop=3190:642:177:549,drawbox=x=900:y=505:w=2290:h=137:color=white:t=fill,scale=340:-1,pad=512:320:(ow-iw)/2:(oh-ih)/2:white,curves=all='0/0 0.7/0.22 0.95/0.97 1/1'" \
       -frames:v 1 -c:v libwebp -quality 90 ../../public/work/benkon/thumb.webp
+
+BenKon's preview (the hover card in the intro, shown 300×188) is the full logo at 360px on a
+640×400 canvas, so the card's 16:10 crop keeps it whole:
+
+    ffmpeg -f lavfi -i "gradients=s=640x400:c0=0xF4F9FD:c1=0xE4EEF9:x0=0:y0=0:x1=640:y1=400:d=1" \
+      -i bk-benkon-official-logo.png -filter_complex \
+      "[1]crop=3190:642:177:549,scale=360:-1[l];[0][l]overlay=(W-w)/2:(H-h)/2:format=auto" \
+      -frames:v 1 -c:v libwebp -quality 90 ../../public/work/benkon/preview.webp

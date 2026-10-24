@@ -515,8 +515,29 @@ function Cerebro({ on }: { on: boolean }) {
 /* ─── BenKon · Operation Configuration screen of the admin dashboard, from screenshots ─── */
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const WEEKDAYS = 5
 
-function BenKon() {
+/**
+ * No source to read the motion from, so it is plain: the weekend days are picked one after the
+ * other, then Auto ON is switched on, each a 150ms colour change and a 200ms knob slide.
+ */
+function BenKon({ on }: { on: boolean }) {
+  const [days, setDays] = useState(WEEKDAYS)
+  const [auto, setAuto] = useState(false)
+  useTimeline(
+    on,
+    (reduced) => [
+      later(reduced, 200, () => setDays(6)),
+      later(reduced, 330, () => setDays(7)),
+      later(reduced, 520, () => setAuto(true)),
+    ],
+    // Out in reverse, while the logo closes over it.
+    (reduced) => [
+      later(reduced, 0, () => setAuto(false)),
+      later(reduced, 120, () => setDays(6)),
+      later(reduced, 220, () => setDays(WEEKDAYS)),
+    ],
+  )
   const field = 'flex flex-col gap-1 text-[13px] font-medium'
   const input =
     'h-[34px] w-[150px] rounded-md border border-[#D1D5DB] px-3 text-[14px] leading-[32px] font-normal'
@@ -535,10 +556,10 @@ function BenKon() {
       </div>
       <div className="mt-3.5 text-[12px] font-medium">Repeat Days:</div>
       <div className="mt-1.5 flex gap-1.5">
-        {DAYS.map((d) => (
+        {DAYS.map((d, i) => (
           <span
             key={d}
-            className="h-[22px] rounded-full bg-[#4589DF] px-[9px] text-[12px] leading-[22px] text-white"
+            className={`h-[22px] rounded-full px-[9px] text-[12px] leading-[22px] transition-colors duration-150 motion-reduce:transition-none ${i < days ? 'bg-[#4589DF] text-white' : 'bg-[#EEF2F7] text-[#6B7280]'}`}
           >
             {d}
           </span>
@@ -546,7 +567,13 @@ function BenKon() {
       </div>
       <div className="mt-4 flex items-center rounded-md border border-[#E5E7EB] px-3.5 py-3 text-[15px] font-semibold">
         Auto ON
-        <span className="relative ml-auto h-[18px] w-[38px] rounded-full bg-[#E5E7EB] after:absolute after:top-0.5 after:left-0.5 after:size-[14px] after:rounded-full after:bg-white after:shadow-sm" />
+        <span
+          className={`relative ml-auto h-[18px] w-[38px] rounded-full transition-colors duration-150 motion-reduce:transition-none ${auto ? 'bg-[#4589DF]' : 'bg-[#E5E7EB]'}`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 size-[14px] rounded-full bg-white shadow-sm transition-transform duration-200 ease-out motion-reduce:transition-none ${auto ? 'translate-x-5' : ''}`}
+          />
+        </span>
         <span className="ml-2.5 text-[13px] font-normal">Activate ?</span>
       </div>
     </div>
@@ -659,9 +686,11 @@ export function WorkDetail({
   const Detail = DETAILS[slug]
   if (!Detail) return null
   return (
+    // Hidden once the logo has closed over it (300ms): a light detail under the canvas otherwise
+    // shows through the anti-aliased rounded corners as a bright rim.
     <div
       aria-hidden
-      className={`absolute top-0 left-0 h-[240px] w-[384px] origin-top-left overflow-hidden ${className}`}
+      className={`absolute top-0 left-0 h-[240px] w-[384px] origin-top-left overflow-hidden ${on ? '' : 'invisible transition-[visibility] delay-300'} ${className}`}
     >
       <Detail on={on} />
     </div>

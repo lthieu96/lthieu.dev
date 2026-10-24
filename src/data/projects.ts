@@ -40,7 +40,8 @@ export type CaseStudy = {
   links?: CaseStudyLink[]
   /** Headline numbers under the media. Public figures only. */
   stats?: { value: string; label: string }[]
-  media: CaseStudyMedia
+  /** Several are stacked, in order. */
+  media: CaseStudyMedia | CaseStudyMedia[]
   sections: CaseStudySection[]
 }
 
@@ -95,7 +96,7 @@ export const projects: Project[] = [
       intro:
         'An app that turns crypto news into cards. You swipe one, take a side, and it becomes a real trade. I work on the phone app and the servers behind it.',
       meta: [
-        { label: 'Role', value: 'Full-stack engineer' },
+        { label: 'Role', value: 'Software Engineer' },
         {
           label: 'Team',
           value: 'Small product team at KVY Technology',
@@ -166,13 +167,8 @@ export const projects: Project[] = [
           ],
         },
         {
-          heading: 'One hard problem',
-          body: 'Everyone wants the exchange at once: people trading, the app refreshing prices, background jobs syncing. If one side hogs the budget, trades slow down. So each side gets its own lane, and trading always goes first.',
-          figure: 'request-budget',
-        },
-        {
           heading: 'What I learned',
-          body: 'Real money makes small bugs loud. I now design for the messy cases first, like a trade that closes before it opens, or two of our own users trading with each other.',
+          body: 'Real money makes small bugs loud. I now design for the messy cases first, like a close that reaches us before its own open, or two of our own users trading with each other, where our records kept only one side.',
         },
       ],
     },
@@ -297,6 +293,72 @@ export const projects: Project[] = [
       body: 'Freelance for Madeezi. An ERP that takes each visit from report to sign-off: web admin, Expo phone app and a Rails backend.',
       image: { src: '/work/greenmaster/thumb.webp' },
       platforms: 'Web · phone',
+    },
+    caseStudy: {
+      intro:
+        'Software for a pest-control company. Technicians fill in each visit on their phone, the customer signs it off on the spot, and the office runs it all from the web. I built most of the backend, the web admin and the phone app.',
+      meta: [
+        { label: 'Role', value: 'Software Engineer' },
+        { label: 'Team', value: 'Freelance for Madeezi, with one other developer' },
+        { label: 'When', value: 'May 2025 – June 2026' },
+        { label: 'Built with', value: 'Rails, React, Expo, PostgreSQL' },
+      ],
+      media: [
+        {
+          kind: 'image',
+          // Recorded headless by /tmp/gmg-rec/run2.mjs on the live admin (the new report is cancelled), with client, staff and
+          // contact details swapped for sample data in the page (mask.js); the test report is real.
+          src: '/work/greenmaster/greenmaster-web-poster.webp',
+          video: '/work/greenmaster/greenmaster-web.mp4',
+          alt: 'GreenMaster Go web admin: filling in a new service report, a report’s details, customers and the service catalog',
+          caption: 'Client, staff and contact names replaced with sample data.',
+        },
+        // Cut from an iOS screen recording (~/Movies/gmg-raw/app.mp4) by /tmp/gmg-edit/build-app.sh:
+        // clock set to 9:41, recording dot hidden, other client sites in the search blurred.
+        {
+          kind: 'phones',
+          slots: [
+            {
+              label: 'A visit, from new report to the customer’s signature',
+              note: '17s loop',
+              src: '/work/greenmaster/greenmaster-app.mp4',
+              poster: '/work/greenmaster/greenmaster-app-poster.webp',
+            },
+          ],
+          caption: 'Other client sites in the search are blurred.',
+        },
+      ],
+      sections: [
+        {
+          heading: 'The idea',
+          body: 'Every visit becomes a report: the site, the services, the work done in each area, the chemicals used, and the customer’s rating and sign-off. The office sees it as soon as the technician finishes.',
+        },
+        {
+          heading: 'What I built',
+          items: [
+            {
+              title: 'The phone app',
+              body: 'An Expo app for technicians. They log in with a one-time code, pick the site, services and areas from bottom sheets, then hand the phone to the customer.',
+            },
+            {
+              title: 'Customer sign-off',
+              body: 'The customer rates the visit and confirms it with a signature or a one-time code. The code goes by Zalo when their number has it, by SMS otherwise.',
+            },
+            {
+              title: 'The web admin',
+              body: 'A React app for the office: customers, sites, contacts, staff by region, chemicals, and every report, with PDF export.',
+            },
+            {
+              title: 'The backend',
+              body: 'A Rails 8 API with roles, email invitations for new staff, and search across reports by number, site or contact.',
+            },
+          ],
+        },
+        {
+          heading: 'What I learned',
+          body: 'The person holding the app is standing in a customer’s kitchen. Every extra tap shows. I put the usual choice first and kept each step to one sheet.',
+        },
+      ],
     },
   },
 ]

@@ -96,7 +96,9 @@ function ProjectRow({
     <>
       <span
         ref={shown.ref}
-        className="relative h-20 w-32 shrink-0 overflow-hidden rounded-lg outline outline-1 outline-edge -outline-offset-1 max-sm:h-16 max-sm:w-24"
+        // The hairline sits on top of the content: an outline paints underneath it, so it only
+        // peeked out at the rounded corners, where the clipped content left a gap.
+        className="relative h-20 w-32 shrink-0 overflow-hidden rounded-lg after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:border after:border-edge max-sm:h-16 max-sm:w-24"
       >
         {detail && <WorkDetail slug={project.slug} on={shown.on} />}
         {/* With a detail underneath, the dithered logo wipes off to it in the shader, with the
