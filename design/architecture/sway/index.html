@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sway · system map prototype</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist@5/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist-mono@5/index.css">
+<script>
+  // Same contract as the site: data-theme on <html>, set before paint.
+  document.documentElement.dataset.theme =
+    matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+</script>
+<style>
+  :root {
+    --bg: #111111; --fg: #ededed; --muted: #8f8f8f; --subtle: #7c7c7c; --prose: #c4c4c4;
+    --line: rgb(255 255 255 / 0.08); --edge: rgb(255 255 255 / 0.1); --border: #2a2a2e;
+    --well: #191919; --card: #181818; --media: #141414;
+    --accent: #8cc4f2; --accent-soft: rgb(140 196 242 / 0.12);
+    --lane-1: #8cc4f2; --lane-2: #5e7a92; --lane-3: #3a4a58;
+    --shadow: rgb(0 0 0 / 0.5);
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+    --mono: "Geist Mono Variable", ui-monospace, monospace;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #fcfcfb; --fg: #1a1a1a; --muted: #6f6f6f; --subtle: #737373; --prose: #3d3d3d;
+    --line: rgb(0 0 0 / 0.07); --edge: rgb(0 0 0 / 0.08); --border: #dcdcd8;
+    --well: #f3f3f1; --card: #ffffff; --media: #f3f3f1;
+    --accent: #2f6fb0; --accent-soft: rgb(47 111 176 / 0.08);
+    --lane-1: #2f6fb0; --lane-2: #86a6c4; --lane-3: #c9d6e2;
+    --shadow: rgb(0 0 0 / 0.12);
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans);
+    -webkit-font-smoothing: antialiased; }
+  .page { max-width: 920px; margin: 0 auto; padding: 32px 20px 64px; }
+  .demo-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 24px;
+    font: 12px/1.5 var(--mono); color: var(--subtle); }
+  .demo-bar button { font: inherit; color: var(--fg); background: none; border: 1px solid var(--edge);
+    border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+  .demo-bar button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+  .demo-bar .grow { flex: 1; }
+
+  /* The figure: this block is what moves into the case study. */
+  .arch { position: relative; margin: 0 auto; max-width: 880px; }
+  .arch-media { position: relative; background: var(--media); border: 1px solid var(--edge);
+    border-radius: 12px; overflow: hidden; }
+  .arch svg { display: block; width: 100%; height: auto; }
+  .arch text { font-family: var(--sans); }
+  .edge { fill: none; stroke: var(--border); stroke-width: 1; vector-effect: non-scaling-stroke;
+    transition: opacity 150ms var(--ease-out); }
+  .trail { fill: none; stroke: var(--accent); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .elabel { font: 12px var(--mono); fill: var(--subtle); }
+  .node { cursor: default; outline: none; }
+  .node rect.box { fill: var(--card); stroke: var(--edge); stroke-width: 1;
+    vector-effect: non-scaling-stroke; transition: stroke 150ms var(--ease-out); }
+  .node.ext rect.box { fill: var(--well); }
+  .node.mine rect.box { stroke: var(--accent); }
+  .node.flash rect.box { stroke: var(--accent); stroke-width: 2; }
+  .node:focus-visible rect.box { stroke: var(--accent); stroke-width: 2; }
+  .node .lab { font-size: 13px; font-weight: 500; fill: var(--fg); }
+  .node .sub { font-size: 12px; fill: var(--muted); }
+  .node .tag { font: 12px var(--mono); fill: var(--subtle); }
+  .node.mine .tag { fill: var(--accent); }
+  .lane { transition: width 240ms var(--ease-out); }
+  .dim .edge:not(.rel), .dim .elabel { opacity: 0.3; }
+  .packet { fill: var(--accent); }
+  .halo { fill: var(--accent-soft); }
+  .tick { fill: var(--subtle); }
+  .toast rect { fill: var(--card); stroke: var(--accent); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .toast text { font-size: 12px; fill: var(--fg); }
+  .toast { opacity: 0; transition: opacity 150ms var(--ease-out); }
+  .toast.on { opacity: 1; }
+
+  .controls { display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .btn { width: 28px; height: 28px; display: grid; place-items: center; flex: none;
+    border: 1px solid var(--edge); border-radius: 6px; background: none; color: var(--fg); cursor: pointer; }
+  .btn:focus-visible, .stage:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .btn svg { width: 14px; height: 14px; }
+  .stages { flex: 1 1 240px; display: flex; gap: 2px; flex-wrap: wrap; margin: 0; padding: 0; list-style: none; }
+  .stage { font: 12px/1.5 var(--sans); color: var(--muted); background: none; border: 0;
+    border-radius: 6px; padding: 4px 8px; cursor: pointer; display: flex; gap: 6px; }
+  .stage .n { font-family: var(--mono); color: var(--subtle); }
+  .stage.done { color: var(--fg); }
+  .stage[aria-current="step"] { background: var(--accent-soft); color: var(--accent); }
+  .stage[aria-current="step"] .n { color: var(--accent); }
+  .caption { flex: 1 1 100%; margin: 0; font-size: 13px; line-height: 1.6; color: var(--prose); min-height: 2lh; }
+  .caption b { font-weight: 500; color: var(--fg); }
+  .legend { margin: 12px 0 0; font: 12px/1.5 var(--mono); color: var(--subtle); }
+  .legend i { font-style: normal; color: var(--accent); }
+
+  .tip { position: absolute; z-index: 2; width: 260px; padding: 12px; pointer-events: none;
+    background: var(--card); border: 1px solid var(--edge); border-radius: 8px;
+    box-shadow: 0 8px 24px var(--shadow); opacity: 0; transform: translateY(4px);
+    transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out); }
+  .tip.on { opacity: 1; transform: none; }
+  .tip h3 { margin: 0 0 4px; font-size: 13px; font-weight: 500; }
+  .tip p { margin: 0 0 6px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+  .tip span { font: 12px var(--mono); color: var(--subtle); }
+  .tip span.me { color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tip, .toast, .edge, .lane, .node rect.box { transition: none; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="demo-bar" aria-label="Prototype controls">
+    <span>width</span>
+    <button data-w="880" aria-pressed="true">880</button>
+    <button data-w="600">600</button>
+    <button data-w="360">360</button>
+    <span class="grow"></span>
+    <button id="theme">theme</button>
+  </div>
+
+  <figure class="arch" id="arch" aria-labelledby="arch-cap">
+    <div class="arch-media">
+      <svg id="map" role="img" aria-label="Sway system map: phone app, API, rate-limit gateway, Hyperliquid, fill stream, price feed, story pipeline and rewards contract"></svg>
+      <div class="controls">
+        <button class="btn" id="play" aria-label="Pause"></button>
+        <ol class="stages" id="stages"></ol>
+        <p class="caption" id="caption"></p>
+      </div>
+    </div>
+    <div class="tip" id="tip" role="tooltip"></div>
+    <figcaption class="legend" id="arch-cap">How an order makes the round trip. <i>Blue outline</i>: parts I built or co-built.</figcaption>
+  </figure>
+</main>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg'
+const ICON = {
+  pause: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>',
+}
+
+// Public labels only. who: me | co | worked | team | ext
+const NODES = {
+  story: { lab: 'Story pipeline', sub: 'news to cards', who: 'team',
+    tip: 'Reads the news, decides what is worth a card, and writes it for the feed.' },
+  price: { lab: 'Price feed', sub: 'live prices', who: 'me',
+    tip: 'One live connection to the exchange, shared by every phone, so prices cost nothing from the request budget.' },
+  phone: { lab: 'Phone app', sub: 'swipe a side', who: 'worked',
+    tip: 'Where people swipe a story and pick Bullish or Bearish. I built the positions, orders and notification screens.' },
+  api: { lab: 'API', sub: 'orders, alerts', who: 'worked',
+    tip: 'Places orders, keeps the trade log, sends alerts and works out each fee share. I built the fills, alerts and rewards parts.' },
+  gw: { lab: 'Rate-limit gateway', sub: 'trading first', who: 'me', lanes: true,
+    tip: 'The exchange allows only so many requests a minute. This charges each call its cost and keeps a lane for trades, so a background sync never holds an order back.' },
+  hl: { lab: 'Hyperliquid', sub: 'perp exchange', who: 'ext',
+    tip: 'The exchange where the trade actually happens.' },
+  fill: { lab: 'Fill stream', sub: 'fill to user', who: 'co',
+    tip: 'Watches every trade on the exchange, keeps the ones from Sway wallets and hands each fill to its owner. Saved first, so a retry never counts twice.' },
+  rew: { lab: 'Rewards contract', sub: 'fees on-chain', who: 'me',
+    tip: 'Holds each creator and referrer share of trading fees until they claim it. Paid out in batches.' },
+}
+const WHO = { me: 'built by me', co: 'co-built', worked: 'worked on', team: 'built by the team', ext: 'external' }
+
+// Two layouts from one table: [x, y, w, h] and SVG path data in viewBox units.
+const LAYOUTS = {
+  wide: {
+    vb: [880, 420],
+    nodes: { story: [256, 32, 168, 60], price: [476, 32, 168, 78], phone: [36, 176, 168, 60],
+      api: [256, 176, 168, 60], gw: [476, 156, 168, 100], hl: [696, 176, 148, 60],
+      fill: [476, 320, 168, 78], rew: [36, 320, 168, 78] },
+    edges: {
+      cards: 'M340 92 V176', order: 'M204 196 H256', push: 'M256 220 H204',
+      lane: 'M424 206 H476', send: 'M644 206 H696',
+      fill: 'M770 236 V347 Q770 359 758 359 H644', match: 'M476 359 H392 Q380 359 380 347 V236',
+      fees: 'M300 236 V347 Q300 359 288 359 H204', claim: 'M120 320 V236',
+      ticks: 'M770 176 V83 Q770 71 758 71 H644',
+      prices: 'M520 32 V28 Q520 16 508 16 H132 Q120 16 120 28 V176',
+      mark: 'M500 110 V138 Q500 150 488 150 H422 Q410 150 410 162 V176',
+    },
+    labels: [['order', 212, 190], ['push', 214, 234], ['lane', 432, 200], ['send', 652, 200],
+      ['fill', 778, 294], ['matched', 388, 294], ['fees', 232, 376], ['claim', 128, 284],
+      ['cards', 348, 132], ['live prices', 128, 52], ['mark', 418, 146], ['ticks', 778, 128]],
+    toast: [36, 136],
+  },
+  narrow: {
+    vb: [360, 490],
+    nodes: { phone: [16, 16, 150, 60], story: [194, 16, 150, 60], api: [16, 136, 150, 60],
+      fill: [194, 136, 150, 78], gw: [16, 256, 150, 100], hl: [194, 276, 150, 60],
+      rew: [16, 396, 150, 78], price: [194, 396, 150, 78] },
+    edges: {
+      order: 'M60 76 V136', push: 'M110 136 V76',
+      cards: 'M269 76 V96 Q269 106 259 106 H130 Q120 106 120 116 V136',
+      lane: 'M91 196 V256', send: 'M166 306 H194', fill: 'M269 276 V214', match: 'M194 166 H166',
+      fees: 'M16 180 H14 Q6 180 6 188 V427 Q6 435 14 435 H16', claim: null,
+      ticks: 'M269 336 V396',
+      prices: 'M344 430 H346 Q354 430 354 422 V14 Q354 6 346 6 H101 Q91 6 91 14 V16', mark: null,
+    },
+    labels: [],
+    toast: [24, 84],
+  },
+}
+
+// Stages: hops run in order. hold = ms to rest after the last hop.
+const STAGES = [
+  { k: 'Story', hops: ['cards'], ms: 600, nodes: ['story', 'api'],
+    text: '<b>A story becomes a card.</b> The news pipeline writes a card and the API puts it in the feed.' },
+  { k: 'Swipe', hops: ['order'], ms: 500, nodes: ['phone', 'api'],
+    text: '<b>Someone swipes Bullish.</b> The phone sends the order to the API, which signs it and logs it first.' },
+  { k: 'Lane', hops: ['lane'], ms: 500, nodes: ['api', 'gw'], lane: true,
+    text: '<b>Trades get the first lane.</b> The gateway charges each call its cost. Trades never wait behind a price refresh or a sync.' },
+  { k: 'Order', hops: ['send'], ms: 500, hold: 400, nodes: ['gw', 'hl'], flash: 'hl',
+    text: '<b>The order lands on the exchange.</b> The gateway passes the signed order to Hyperliquid.' },
+  { k: 'Fill', hops: ['fill'], ms: 700, nodes: ['hl', 'fill'],
+    text: '<b>The fill streams back.</b> Hyperliquid publishes every trade; the fill stream is listening.' },
+  { k: 'Match', hops: ['match'], ms: 500, nodes: ['fill', 'api'],
+    text: '<b>Each fill finds its owner.</b> Only fills from Sway wallets are kept, saved before anything else, then handed to the API.' },
+  { k: 'Notify', hops: ['push'], ms: 500, hold: 500, nodes: ['api', 'phone'], toast: true,
+    text: '<b>A push says it filled.</b> The API completes the trade with price and fees and tells the phone.' },
+  { k: 'Reward', hops: ['fees', 'claim'], ms: 600, nodes: ['api', 'rew', 'phone'],
+    text: '<b>Fees settle on-chain.</b> Each fee share is batched into the rewards contract, where creators and referrers claim it.' },
+]
+const GAP = 250, REST = 1200, TICK_EVERY = 1400
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)')
+const $ = (s) => document.querySelector(s)
+const svg = $('#map'), tip = $('#tip'), cap = $('#caption'), playBtn = $('#play'), fig = $('#arch')
+let laneW = 0, L, paths = {}, lens = {}, trailEls = {}, packet, halo, toast, laneEl, ticks = []
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag)
+  for (const k in attrs) e.setAttribute(k, attrs[k])
+  parent && parent.appendChild(e)
+  return e
+}
+
+function build(name) {
+  L = LAYOUTS[name]
+  svg.replaceChildren()
+  svg.setAttribute('viewBox', `0 0 ${L.vb[0]} ${L.vb[1]}`)
+  paths = {}; lens = {}; trailEls = {}; ticks = []
+  const gEdges = el('g', {}, svg), gTrails = el('g', {}, svg)
+  for (const [k, d] of Object.entries(L.edges)) {
+    if (!d) continue
+    paths[k] = el('path', { d, class: 'edge', 'data-k': k }, gEdges)
+    lens[k] = paths[k].getTotalLength()
+    trailEls[k] = el('path', { d, class: 'trail', 'stroke-dasharray': lens[k], 'stroke-dashoffset': lens[k] }, gTrails)
+  }
+  for (const [t, x, y] of L.labels) el('text', { x, y, class: 'elabel' }, svg).textContent = t
+  for (let i = 0; i < 3; i++) ticks.push(el('circle', { r: 2, class: 'tick', opacity: 0 }, svg))
+  for (const [id, [x, y, w, h]] of Object.entries(L.nodes)) {
+    const n = NODES[id]
+    const g = el('g', { class: `node ${n.who === 'me' || n.who === 'co' ? 'mine' : ''} ${n.who === 'ext' ? 'ext' : ''}`,
+      tabindex: 0, role: 'button', 'data-id': id, 'aria-label': `${n.lab}, ${WHO[n.who]}. ${n.tip}` }, svg)
+    el('rect', { class: 'box', x: x + 0.5, y: y + 0.5, width: w - 1, height: h - 1, rx: 8 }, g)
+    el('text', { class: 'lab', x: x + 12, y: y + 25 }, g).textContent = n.lab
+    el('text', { class: 'sub', x: x + 12, y: y + 43 }, g).textContent = n.sub
+    if (n.lanes) {
+      const inner = w - 24 - 4, shares = [[0.55, 'var(--lane-1)'], [0.3, 'var(--lane-2)'], [0.15, 'var(--lane-3)']]
+      let lx = x + 12
+      laneW = inner * 0.55
+      shares.forEach(([f, c], i) => {
+        const lw = inner * f
+        const r = el('rect', { class: 'lane', x: lx, y: y + 56, width: lw, height: 4, rx: 2, fill: c }, g)
+        if (i === 0) laneEl = r
+        lx += lw + 2
+      })
+    }
+    if (h > 60) el('text', { class: 'tag', x: x + 12, y: y + h - 14 }, g).textContent = WHO[n.who]
+  }
+  toast = el('g', { class: 'toast' }, svg)
+  el('rect', { x: L.toast[0], y: L.toast[1], width: 104, height: 26, rx: 6 }, toast)
+  el('text', { x: L.toast[0] + 10, y: L.toast[1] + 17 }, toast).textContent = 'Order filled'
+  halo = el('circle', { r: 10, class: 'halo', opacity: 0 }, svg)
+  packet = el('circle', { r: 4, class: 'packet', opacity: 0 }, svg)
+  bindNodes()
+  render()
+}
+
+// Timeline: stage i starts at starts[i]; a hop runs ms, then the next hop.
+const starts = []; let LOOP = 0
+STAGES.forEach((s, i) => { starts[i] = LOOP; LOOP += s.hops.length * s.ms + (s.hold || 0) + GAP })
+const stageEnd = (i) => starts[i] + STAGES[i].hops.length * STAGES[i].ms + (STAGES[i].hold || 0)
+LOOP += REST
+
+let t = 0, playing = !reduce.matches, stopAt = null, last = 0, visible = true, raf = 0
+const ease = (x) => 1 - Math.pow(1 - x, 4) // close to cubic-bezier(0.23, 1, 0.32, 1)
+
+function stageAt(time) {
+  for (let i = STAGES.length - 1; i >= 0; i--) if (time >= starts[i]) return i
+  return 0
+}
+
+function render() {
+  if (!L) return // first layout comes from the ResizeObserver
+  const cur = stageAt(t)
+  // trails: past stages fully drawn, current one in progress, later ones hidden
+  for (const k in trailEls) trailEls[k].setAttribute('stroke-dashoffset', lens[k])
+  let head = null
+  STAGES.forEach((s, i) => {
+    if (i > cur) return
+    s.hops.forEach((h, j) => {
+      if (!paths[h]) return
+      const t0 = starts[i] + j * s.ms
+      const p = reduce.matches && i === cur ? 1 : Math.min(1, Math.max(0, (t - t0) / s.ms))
+      if (p <= 0) return
+      const e = ease(p)
+      trailEls[h].setAttribute('stroke-dashoffset', lens[h] * (1 - e))
+      if (i === cur && p > 0) head = paths[h].getPointAtLength(lens[h] * e)
+    })
+  })
+  const resting = t > stageEnd(STAGES.length - 1) + GAP
+  const show = head && !resting
+  for (const c of [packet, halo]) {
+    c.setAttribute('opacity', show ? 1 : 0)
+    if (head) { c.setAttribute('cx', head.x); c.setAttribute('cy', head.y) }
+  }
+  if (resting) {
+    const fade = 1 - Math.min(1, (t - stageEnd(STAGES.length - 1) - GAP) / 600)
+    for (const k in trailEls) trailEls[k].style.opacity = fade
+  } else for (const k in trailEls) trailEls[k].style.opacity = 1
+
+  const s = STAGES[cur]
+  toast.classList.toggle('on', !!s.toast && t >= stageEnd(cur) - (s.hold || 0) - 100 && !resting)
+  if (laneEl) laneEl.setAttribute('width', s.lane && t < stageEnd(cur) + GAP ? laneW + 6 : laneW)
+  svg.querySelectorAll('.node').forEach((n) => n.classList.toggle('flash', s.flash === n.dataset.id && t > stageEnd(cur) - s.hold && !resting))
+
+  // ambient price ticks, muted, never accent; off under reduced motion
+  const tickPath = ['ticks', 'prices'].filter((k) => paths[k])
+  const total = tickPath.reduce((a, k) => a + lens[k], 0)
+  ticks.forEach((c, i) => {
+    if (reduce.matches || !total) return c.setAttribute('opacity', 0)
+    const ph = ((performance.now() / TICK_EVERY + i / 3) % 1) * total
+    let d = ph, k = tickPath[0]
+    if (d > lens[k]) { d -= lens[k]; k = tickPath[1] }
+    const pt = paths[k].getPointAtLength(d)
+    c.setAttribute('cx', pt.x); c.setAttribute('cy', pt.y); c.setAttribute('opacity', 0.6)
+  })
+
+  // controls
+  document.querySelectorAll('.stage').forEach((b, i) => {
+    b.classList.toggle('done', i < cur)
+    if (i === cur) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current')
+  })
+  if (cap.dataset.i !== String(cur)) { cap.innerHTML = `${cur + 1} / ${STAGES.length} · ${s.text}`; cap.dataset.i = cur }
+}
+
+function frame(now) {
+  raf = 0
+  const dt = Math.min(64, now - (last || now)); last = now
+  if (playing) {
+    t += dt
+    if (stopAt !== null && t >= stopAt) { t = stopAt; stopAt = null; setPlaying(false) }
+    if (t >= LOOP) t = 0
+  }
+  render()
+  if (visible && (playing || !reduce.matches)) raf = requestAnimationFrame(frame)
+}
+function kick() { if (!raf && visible) { last = 0; raf = requestAnimationFrame(frame) } }
+
+function setPlaying(p) {
+  playing = p
+  playBtn.innerHTML = p ? ICON.pause : ICON.play
+  playBtn.setAttribute('aria-label', p ? 'Pause' : 'Play')
+  // only announce captions when nothing auto-advances
+  cap.setAttribute('aria-live', p ? 'off' : 'polite')
+  if (p) kick()
+}
+
+function goTo(i) {
+  if (reduce.matches) { t = stageEnd(i); setPlaying(false); render(); return }
+  t = starts[i]; stopAt = stageEnd(i); setPlaying(true)
+}
+
+playBtn.addEventListener('click', () => {
+  if (reduce.matches && !playing) { goTo((stageAt(t) + 1) % STAGES.length); return } // step, no motion
+  stopAt = null; setPlaying(!playing)
+})
+fig.addEventListener('keydown', (e) => {
+  if (e.key === ' ' && e.target.closest('.node, figure') === e.target) { e.preventDefault(); playBtn.click() }
+  if (e.key === 'ArrowRight') goTo((stageAt(t) + 1) % STAGES.length)
+  if (e.key === 'ArrowLeft') goTo((stageAt(t) + STAGES.length - 1) % STAGES.length)
+})
+
+const list = $('#stages')
+STAGES.forEach((s, i) => {
+  const li = document.createElement('li')
+  li.innerHTML = `<button class="stage"><span class="n">${i + 1}</span>${s.k}</button>`
+  li.firstChild.addEventListener('click', () => goTo(i))
+  list.appendChild(li)
+})
+
+// tooltips: hover after 120 ms, focus at once, close at once
+let tipTimer
+function showTip(g) {
+  const n = NODES[g.dataset.id]
+  tip.innerHTML = `<h3>${n.lab}</h3><p>${n.tip}</p><span class="${n.who === 'me' || n.who === 'co' ? 'me' : ''}">${WHO[n.who]}</span>`
+  const fr = fig.getBoundingClientRect(), r = g.getBoundingClientRect()
+  const w = Math.min(260, fr.width - 16)
+  tip.style.width = w + 'px'
+  let x = r.left - fr.left, y = r.bottom - fr.top + 8
+  x = Math.max(8, Math.min(x, fr.width - w - 8))
+  tip.style.left = x + 'px'; tip.style.top = y + 'px'
+  tip.classList.add('on')
+  if (tip.offsetTop + tip.offsetHeight > fig.offsetHeight) tip.style.top = (r.top - fr.top - tip.offsetHeight - 8) + 'px'
+  svg.classList.add('dim')
+  const rel = new Set(STAGES.filter((s) => s.nodes.includes(g.dataset.id)).flatMap((s) => s.hops))
+  svg.querySelectorAll('.edge').forEach((p) => p.classList.toggle('rel', rel.has(p.dataset.k)))
+}
+function hideTip() { clearTimeout(tipTimer); tip.classList.remove('on'); svg.classList.remove('dim') }
+function bindNodes() {
+  svg.querySelectorAll('.node').forEach((g) => {
+    g.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') tipTimer = setTimeout(() => showTip(g), 120) })
+    g.addEventListener('pointerleave', hideTip)
+    g.addEventListener('click', () => showTip(g)) // tap on touch; a tap outside closes it
+    g.addEventListener('focus', () => showTip(g))
+    g.addEventListener('blur', hideTip)
+  })
+}
+document.addEventListener('pointerdown', (e) => { if (!e.target.closest('.node')) hideTip() })
+
+// layout by width, pause off screen
+let layoutName = ''
+new ResizeObserver(([e]) => {
+  const next = e.contentRect.width < 600 ? 'narrow' : 'wide'
+  if (next !== layoutName) { layoutName = next; hideTip(); build(next) }
+}).observe(fig)
+new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) kick() }).observe(fig)
+reduce.addEventListener('change', () => { setPlaying(!reduce.matches); render(); kick() })
+
+// demo bar (not part of the figure)
+document.querySelectorAll('[data-w]').forEach((b) => b.addEventListener('click', () => {
+  fig.style.maxWidth = b.dataset.w + 'px'
+  document.querySelectorAll('[data-w]').forEach((x) => x.setAttribute('aria-pressed', x === b))
+}))
+$('#theme').addEventListener('click', () => {
+  const r = document.documentElement
+  r.dataset.theme = r.dataset.theme === 'light' ? 'dark' : 'light'
+})
+
+if (reduce.matches) t = stageEnd(3)
+setPlaying(playing)
+kick()
+
+// Self-check: every stage hop exists in the wide layout, and timings are increasing.
+console.assert(STAGES.every((s) => s.hops.every((h) => h in LAYOUTS.wide.edges && LAYOUTS.wide.edges[h])), 'wide layout misses a hop')
+console.assert(starts.every((v, i) => i === 0 || v > starts[i - 1]), 'stage starts must increase')
+</script>
+</body>
+</html>

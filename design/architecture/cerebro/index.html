@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cerebro · system architecture prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&family=Geist+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fcfcfb; --media: #f3f3f1; --card: #ffffff; --surface-2: #f2f2f0;
+    --border: #e6e6e3; --line: #0000000f; --fg: #1a1a1a; --prose: #3d3d3d;
+    --muted: #6f6f6f; --subtle: #737373; --accent: #2f6fb0; --accent-soft: #2f6fb014;
+    --success: #1f9d61; --lane-1: #2f6fb0; --lane-2: #86a6c4; --lane-3: #c9d6e2;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+    --mono: "Geist Mono", ui-monospace, monospace;
+    color-scheme: light;
+  }
+  :root[data-theme="dark"], :root.auto-dark {
+    --bg: #111111; --media: #141414; --card: #181818; --surface-2: #18181b;
+    --border: #232327; --line: #ffffff14; --fg: #ededed; --prose: #c4c4c4;
+    --muted: #8f8f8f; --subtle: #7c7c7c; --accent: #8cc4f2; --accent-soft: #8cc4f21a;
+    --success: #5fd39a; --lane-1: #8cc4f2; --lane-2: #5e7a92; --lane-3: #3a4a58;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 13px/1.6 var(--sans); padding: 40px 16px; }
+  .page { max-width: 880px; margin: 0 auto; }
+  .meta { font: 12px/1.5 var(--mono); color: var(--muted); letter-spacing: 0.2px; }
+  .page > header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+
+  figure.arch { margin: 0; container-type: inline-size; background: var(--media); border: 1px solid var(--line); border-radius: 12px; padding: 18px 24px 16px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .legend { display: flex; gap: 14px; align-items: center; }
+  .legend span { display: inline-flex; gap: 6px; align-items: center; }
+  .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: none; }
+  .dot.team { background: transparent; border: 1px solid var(--subtle); }
+
+  .stage { position: relative; }
+  svg.edges { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  svg.edges path { fill: none; stroke: var(--subtle); stroke-opacity: 0.45; stroke-width: 1; transition: stroke 150ms var(--ease-out), stroke-opacity 150ms var(--ease-out), opacity 150ms var(--ease-out); }
+  svg.edges path.on { stroke: var(--accent); stroke-opacity: 1; }
+  svg.edges path.context { stroke-dasharray: 2 4; }
+  svg.edges circle { fill: var(--accent); }
+
+  .grid { position: relative; display: grid; gap: 14px 36px; align-items: center;
+    grid-template-columns: minmax(0,1.25fr) minmax(0,1fr) minmax(0,0.9fr) minmax(0,0.85fr) minmax(0,1.1fr);
+    grid-template-areas:
+      "ex co db  .   web"
+      "wa co .   api web"
+      "pf .  ca  ai  web"; }
+  .node { grid-area: var(--a); position: relative; text-align: left; font: inherit; color: inherit;
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px 10px;
+    cursor: pointer; min-height: 44px; width: 100%; min-width: 0; overflow-wrap: anywhere;
+    transition: opacity 150ms var(--ease-out), border-color 150ms var(--ease-out), background-color 150ms var(--ease-out), transform 150ms var(--ease-out); }
+  .node.me { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+  .node.live { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 5%, var(--card)); }
+  .node.ctx { opacity: 0.7; }
+  .node:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .node > span { display: block; }
+  .node .head { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .node .t { font-weight: 500; }
+  .node .s { font: 12px/1.5 var(--mono); color: var(--muted); }
+  .node .list { font: 11px/1.5 var(--mono); color: var(--subtle); margin-top: 2px; }
+  .node .badge { display: none; position: absolute; top: -8px; left: -8px; width: 18px; height: 18px; border-radius: 9px;
+    background: var(--fg); color: var(--bg); font: 11px/18px var(--mono); text-align: center; }
+  .reduced .node .badge { display: block; }
+
+  .node .steps { display: grid; gap: 2px; margin-top: 8px; }
+  .steps span { font: 12px/1.5 var(--mono); color: var(--muted); padding: 3px 8px; border-radius: 4px; transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out); }
+  .steps span b { font-weight: 400; color: var(--subtle); margin-right: 6px; }
+  .steps span.on { background: var(--accent-soft); color: var(--accent); }
+  .steps span.on b { color: var(--accent); }
+
+  .node .mock { margin-top: 8px; display: grid; gap: 6px; }
+  .nw { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; display: flex; gap: 6px; align-items: baseline; }
+  .nw small { font: 12px var(--mono); color: var(--success); }
+  .bar { height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 2px; transition: width 300ms var(--ease-out); }
+  .sync { display: flex; gap: 6px; align-items: center; font: 11px/1.5 var(--mono); color: var(--muted); }
+  .sync .dot { background: var(--success); }
+  .sync.stale .dot { background: var(--subtle); }
+
+  /* hover / focus dimming */
+  .stage.dim .node:not(.rel) { opacity: 0.35; }
+  .stage.dim svg.edges path:not(.rel) { opacity: 0.25; }
+  .stage.dim svg.edges path.rel { stroke: var(--accent); stroke-opacity: 1; }
+  .stage.dim .node.sel { transform: translateY(-1px); border-color: var(--accent); }
+
+  .detail { margin-top: 16px; min-height: 76px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .detail .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .detail h3 { margin: 0; font-size: 14px; font-weight: 500; }
+  .chip { font: 11px/1.5 var(--mono); padding: 1px 8px; border-radius: 10px; border: 1px solid var(--border); color: var(--muted); }
+  .chip.me { border-color: var(--accent); color: var(--accent); }
+  .detail p { margin: 4px 0 0; color: var(--prose); max-width: 64ch; }
+  .detail .who { font: 12px/1.5 var(--mono); color: var(--muted); margin-top: 4px; }
+  .detail .who em { font-style: normal; color: var(--accent); }
+  .fade { animation: fade 150ms var(--ease-out); }
+  @keyframes fade { from { opacity: 0; transform: translateY(2px); } }
+
+  .controls { display: flex; gap: 12px; align-items: center; margin-top: 14px; }
+  .btn { width: 28px; height: 28px; flex: none; border-radius: 14px; border: 1px solid var(--border); background: var(--card); color: var(--fg);
+    display: grid; place-items: center; cursor: pointer; padding: 0; }
+  .btn:focus-visible, .chap:focus-visible, .textbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn svg { width: 12px; height: 12px; fill: currentColor; }
+  .track { flex: 1; display: flex; gap: 4px; touch-action: none; cursor: pointer; padding: 6px 0; }
+  .chap { flex: 1; min-width: 0; border: 0; background: none; padding: 0; text-align: left; cursor: pointer; color: var(--muted); font: 12px/1.5 var(--mono); }
+  .chap .tk { display: block; height: 2px; border-radius: 1px; background: var(--border); overflow: hidden; margin-bottom: 6px; }
+  .chap .tk i { display: block; height: 100%; width: 0; background: var(--fg); }
+  .chap.cur { color: var(--fg); }
+  .chap.cur .tk i { background: var(--accent); }
+  .chap .lbl { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .textbtn { white-space: nowrap; font: 12px var(--mono); color: var(--muted); background: none; border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; cursor: pointer; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* narrow: top to bottom */
+  @container (max-width: 639px) {
+    .grid { gap: 28px 14px; grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+      grid-template-areas: "ex wa" "co pf" "db ca" "api ai" "web web"; }
+    .node[data-id="web"] { max-width: 240px; justify-self: center; }
+    .node .list { display: none; }
+    .chap .lbl .n { display: none; }
+    figure.arch { padding: 16px; }
+  }
+  @container (max-width: 420px) { .legend .tm { display: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <span class="meta">PROTOTYPE · CEREBRO · VARIANT A PIPELINE</span>
+    <button class="textbtn" id="theme" type="button">Theme: auto</button>
+  </header>
+
+  <figure class="arch" id="fig" aria-labelledby="figcap">
+    <div class="topbar">
+      <span class="meta" id="figcap">How a portfolio sync moves through Cerebro</span>
+      <span class="legend meta"><span><i class="dot"></i>built by me</span><span class="tm"><i class="dot team"></i>team</span></span>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="grid" id="grid">
+        <button class="node me" data-id="ex" style="--a:ex" type="button"><span class="badge">2</span>
+          <span class="head"><span class="t">Exchanges</span><i class="dot"></i></span>
+          <span class="s">8 connected</span>
+          <span class="list">Binance · Kraken · OKX · Bitget · Coinbase · Bybit · Aster · Lighter</span></button>
+        <button class="node me" data-id="wa" style="--a:wa" type="button"><span class="badge">2</span>
+          <span class="head"><span class="t">Wallets / chains</span><i class="dot"></i></span>
+          <span class="s">6 platforms</span>
+          <span class="list">EVM · Solana · Bitcoin · Sui · TON · Hyperliquid</span></button>
+        <button class="node" data-id="pf" style="--a:pf" type="button"><span class="badge">5</span>
+          <span class="head"><span class="t">Price feed</span><i class="dot team"></i></span>
+          <span class="s">live ticks</span></button>
+        <button class="node me" data-id="co" style="--a:co" type="button"><span class="badge">2</span>
+          <span class="head"><span class="t">Data collector</span><i class="dot"></i></span>
+          <span class="s">a job per account</span>
+          <span class="steps" id="steps"><span><b>01</b>fetch</span><span><b>02</b>normalise</span><span><b>03</b>price</span></span></button>
+        <button class="node" data-id="db" style="--a:db" type="button"><span class="badge">3</span>
+          <span class="head"><span class="t">Database</span><i class="dot team"></i></span>
+          <span class="s">MongoDB</span></button>
+        <button class="node me" data-id="ca" style="--a:ca" type="button"><span class="badge">3</span>
+          <span class="head"><span class="t">Cache</span><i class="dot"></i></span>
+          <span class="s">Redis</span></button>
+        <button class="node me" data-id="api" style="--a:api" type="button"><span class="badge">4</span>
+          <span class="head"><span class="t">API</span><i class="dot"></i></span>
+          <span class="s">NestJS</span></button>
+        <button class="node ctx" data-id="ai" style="--a:ai" type="button">
+          <span class="head"><span class="t">AI assistant</span><i class="dot team"></i></span>
+          <span class="s">context</span></button>
+        <button class="node me" data-id="web" style="--a:web" type="button"><span class="badge">1</span>
+          <span class="head"><span class="t">Web app</span><i class="dot"></i></span>
+          <span class="s">Next.js</span>
+          <span class="mock">
+            <span class="meta" style="font-size:11px;letter-spacing:.6px">NET WORTH</span>
+            <span class="nw"><span id="nw">$0</span><small id="chg"></small></span>
+            <span class="bar"><i id="b1" style="background:var(--lane-1)"></i></span>
+            <span class="bar"><i id="b2" style="background:var(--lane-2)"></i></span>
+            <span class="bar"><i id="b3" style="background:var(--lane-3)"></i></span>
+            <span class="sync" id="sync"><i class="dot"></i><span id="synct">waiting</span></span>
+          </span></button>
+      </div>
+      <svg class="edges" id="edges" aria-hidden="true"></svg>
+    </div>
+
+    <div class="detail" id="detail" aria-live="polite"></div>
+
+    <div class="controls">
+      <button class="btn" id="play" type="button" aria-label="Pause"></button>
+      <div class="track" id="track" role="group" aria-label="Chapters"></div>
+    </div>
+  </figure>
+  <p class="meta" style="margin-top:10px">Sample numbers. Hover, focus or tap a part. Arrow keys move along the data path, Escape clears.</p>
+</div>
+
+<script>
+(() => {
+  const T = 10; // seconds per loop
+  const CH = [
+    { k: 'Connect', s: 0, e: 1.5, cap: 'You add a read-only exchange key or a wallet address. The API saves it and queues a sync job.' },
+    { k: 'Collect', s: 1.5, e: 4.5, cap: 'The data collector pulls balances and positions from every source, maps each symbol onto one token list, and prices it.' },
+    { k: 'Store', s: 4.5, e: 6, cap: 'The result is written twice: a snapshot to the database for history, and a hot copy to the cache.' },
+    { k: 'Serve', s: 6, e: 7.5, cap: 'The API reads the cache first and sends one portfolio to the web app.' },
+    { k: 'Live', s: 7.5, e: 10, cap: 'Live price ticks flow through the cache and API, so the numbers move without a refresh.' },
+  ];
+  const NODES = {
+    ex: { t: 'Exchanges', who: 'me', what: 'Reads balances, earn and futures positions through each exchange’s read-only API. Every exchange has its own rate limiter and error handling.', mine: 'Binance, Kraken, OKX, Bitget, Coinbase, Bybit, Aster', team: 'Lighter' },
+    wa: { t: 'Wallets / chains', who: 'me', what: 'Reads tokens, DeFi positions and NFTs for a wallet address, per chain family.', mine: 'EVM, Solana, Hyperliquid', team: 'Bitcoin, Sui, TON' },
+    pf: { t: 'Price feed', who: 'team', what: 'One live stream of exchange ticks, batched and published into the cache.', team: 'all of it' },
+    co: { t: 'Data collector', who: 'me', what: 'Runs a sync job per account: fetch, map every symbol onto one token list, price it, then work out net worth and profit and loss.', mine: 'fetch, normalise, price, portfolio maths', team: 'the per-chain job queues' },
+    db: { t: 'Database', who: 'team', what: 'MongoDB. Accounts, the shared token list, and daily snapshots for history and charts.', team: 'shared schema' },
+    ca: { t: 'Cache', who: 'me', what: 'Redis. Hot portfolio reads, sync progress events, and live price fan-out.', mine: 'the portfolio cache', team: 'price fan-out, job queues' },
+    api: { t: 'API', who: 'me', what: 'NestJS. Accounts, auth, portfolio and history endpoints. Pushes sync progress and prices to the browser.', mine: 'wallet, portfolio and exchange endpoints', team: 'auth, swap' },
+    ai: { t: 'AI assistant', who: 'team', what: 'Research and portfolio ideas built on the same API. Shown for context.', team: 'all of it' },
+    web: { t: 'Web app', who: 'me', what: 'Next.js. Portfolio pages that stay readable while numbers update, and say clearly when data is loading or out of date.', mine: 'portfolio pages', team: 'swap, AI chat' },
+  };
+  const EDGES = [
+    ['ex', 'co'], ['wa', 'co'], ['co', 'db'], ['co', 'ca'], ['db', 'api'], ['ca', 'api'], ['api', 'web'], ['pf', 'ca'], ['api', 'ai', 'context'],
+  ];
+  const eid = (a, b) => a + '-' + b;
+  // packets: edge, start, duration, reverse
+  const P = [];
+  P.push(['api-web', 0.2, 0.8, true]);
+  [0, 0.35, 0.7, 1.05].forEach((d) => { P.push(['ex-co', 1.6 + d, 0.9]); P.push(['wa-co', 1.75 + d, 0.9]); });
+  P.push(['co-db', 4.6, 0.6], ['co-ca', 4.7, 0.6], ['co-db', 5.1, 0.6], ['co-ca', 5.2, 0.6]);
+  P.push(['db-api', 6.0, 0.6], ['ca-api', 6.05, 0.5], ['api-web', 6.75, 0.55]);
+  for (let s = 7.6; s < 9.6; s += 1.2) P.push(['pf-ca', s, 0.5], ['ca-api', s + 0.5, 0.35], ['api-web', s + 0.85, 0.35]);
+
+  const $ = (s) => document.querySelector(s);
+  const fig = $('#fig'), stage = $('#stage'), grid = $('#grid'), svg = $('#edges'), detail = $('#detail');
+  const nodes = {}; document.querySelectorAll('.node').forEach((n) => (nodes[n.dataset.id] = n));
+  const NS = 'http://www.w3.org/2000/svg';
+  const paths = {};
+  EDGES.forEach(([a, b, c]) => { const p = document.createElementNS(NS, 'path'); if (c) p.classList.add('context'); svg.appendChild(p); paths[eid(a, b)] = { el: p, a, b, len: 0 }; });
+  const pk = P.map(([e, s, d, r]) => {
+    const g = document.createElementNS(NS, 'g');
+    [[3, 0.25], [4, 0.5], [6, 1]].forEach(([size, o]) => { const c = document.createElementNS(NS, 'circle'); c.setAttribute('r', size / 2); c.setAttribute('opacity', o); g.appendChild(c); });
+    g.style.display = 'none'; svg.appendChild(g);
+    return { e, s, d, r, g, lag: 0 };
+  });
+
+  // layout: measure the grid, draw beziers between card edges
+  function layout() {
+    const R = grid.getBoundingClientRect();
+    const box = (id) => { const r = nodes[id].getBoundingClientRect(); return { l: r.left - R.left, r: r.right - R.left, t: r.top - R.top, b: r.bottom - R.top, cx: (r.left + r.right) / 2 - R.left, cy: (r.top + r.bottom) / 2 - R.top }; };
+    const counts = {};
+    Object.values(paths).forEach((p) => {
+      const A = box(p.a), B = box(p.b);
+      let d;
+      const overlapY = B.t < A.b && B.b > A.t;
+      if (B.l - A.r >= 24 || (B.l >= A.r - 4 && overlapY)) { // horizontal
+        const k = (counts[p.b + 'L'] = (counts[p.b + 'L'] || 0) + 1);
+        const y2 = B.cy + (p.b === 'co' ? (k === 1 ? -8 : 8) : 0);
+        const mx = (A.r + B.l) / 2; d = `M${A.r} ${A.cy} C${mx} ${A.cy} ${mx} ${y2} ${B.l} ${y2}`;
+      } else if (B.t >= A.b - 4) { // vertical
+        const my = (A.b + B.t) / 2; d = `M${A.cx} ${A.b} C${A.cx} ${my} ${B.cx} ${my} ${B.cx} ${B.t}`;
+      } else { const mx = (A.l + B.r) / 2; d = `M${A.l} ${A.cy} C${mx} ${A.cy} ${mx} ${B.cy} ${B.r} ${B.cy}`; }
+      p.el.setAttribute('d', d); p.len = p.el.getTotalLength();
+    });
+    render();
+  }
+
+  // state
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let t = 0, playing = !reduced.matches, visible = true, last = 0, sel = null, pinned = null, mouse = null, chapIdx = -1;
+  if (reduced.matches) { t = 3.2; fig.classList.add('reduced'); }
+
+  const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+  const clamp = (x) => Math.max(0, Math.min(1, x));
+  const smooth = (a, b, x) => { const u = clamp((x - a) / (b - a)); return u * u * (3 - 2 * u); };
+  const fmt = (v) => '$' + Math.round(v).toLocaleString('en-US');
+
+  function render() {
+    // packets
+    const live = new Set();
+    for (const q of pk) {
+      const p = paths[q.e]; const lt = (t - q.lag - q.s) / q.d;
+      if (lt <= 0 || lt >= 1 || !p.len) { q.g.style.display = 'none'; continue; }
+      q.g.style.display = '';
+      live.add(q.e);
+      const cs = q.g.children; const offs = [0.1, 0.05, 0];
+      for (let i = 0; i < 3; i++) {
+        let u = ease(clamp(lt - offs[i])); if (q.r) u = 1 - u;
+        const pt = p.el.getPointAtLength(u * p.len); cs[i].setAttribute('cx', pt.x); cs[i].setAttribute('cy', pt.y);
+      }
+      q.pos = p.el.getPointAtLength((q.r ? 1 - ease(clamp(lt)) : ease(clamp(lt))) * p.len);
+    }
+    Object.entries(paths).forEach(([k, p]) => p.el.classList.toggle('on', live.has(k)));
+    // active nodes
+    const act = new Set();
+    live.forEach((k) => { const p = paths[k]; act.add(p.a); act.add(p.b); });
+    Object.entries(nodes).forEach(([k, n]) => n.classList.toggle('live', act.has(k)));
+    // collector steps
+    const st = t < 1.5 || t >= 4.5 ? -1 : Math.floor((t - 1.5) / 1);
+    document.querySelectorAll('#steps span').forEach((d, i) => d.classList.toggle('on', i === st));
+    // web readout, a pure function of t
+    const base = 24180, up = reduced.matches && !playing ? 1 : 1 - Math.pow(2, -10 * clamp((t - 7.2) / 0.8));
+    const tick = t >= 7.5 ? Math.floor((t - 7.6 - 0.85 - 0.35) / 1.2) : -1;
+    const drift = [0, 0, 18.4, -6.2, 31.9][Math.max(0, Math.min(4, tick + 1))] || 0;
+    const v = t < 7.2 ? 0 : base * up + drift;
+    $('#nw').textContent = t < 7.2 ? '$ ·····' : fmt(v);
+    $('#chg').textContent = t < 7.2 ? '' : (drift >= 0 ? '+1.2%' : '+1.1%');
+    const fill = t < 7.2 ? 0 : clamp((t - 7.2) / 0.5);
+    $('#b1').style.width = 62 * fill + '%'; $('#b2').style.width = 41 * fill + '%'; $('#b3').style.width = 26 * fill + '%';
+    $('#sync').classList.toggle('stale', t < 7.2);
+    $('#synct').textContent = t < 1.5 ? 'waiting' : t < 7.2 ? 'syncing' : t < 7.6 ? 'synced just now' : 'live';
+    // chapters
+    const ci = CH.findIndex((c) => t >= c.s && t < c.e);
+    chapEls.forEach((el, i) => { const c = CH[i]; el.querySelector('i').style.width = (t >= c.e ? 100 : t <= c.s ? 0 : ((t - c.s) / (c.e - c.s)) * 100) + '%'; el.classList.toggle('cur', i === ci); el.setAttribute('aria-current', i === ci ? 'step' : 'false'); });
+    if (ci !== chapIdx) { chapIdx = ci; if (!sel) showChapter(); }
+  }
+
+  function showChapter() {
+    const c = CH[Math.max(0, chapIdx)];
+    detail.innerHTML = `<div class="fade"><div class="row"><span class="meta">${String(chapIdx + 1).padStart(2, '0')} · ${c.k.toUpperCase()}</span></div><p>${c.cap}</p></div>`;
+  }
+  function showNode(id) {
+    const n = NODES[id];
+    const chip = n.who === 'me' ? '<span class="chip me">built by me</span>' : '<span class="chip">team</span>';
+    const who = [n.mine ? `<em>mine</em> · ${n.mine}` : '', n.team ? `team · ${n.team}` : ''].filter(Boolean).join('<br>');
+    detail.innerHTML = `<div class="fade"><div class="row"><h3>${n.t}</h3>${chip}</div><p>${n.what}</p><div class="who">${who}</div></div>`;
+  }
+
+  // selection and dimming
+  function select(id) {
+    sel = id;
+    stage.classList.toggle('dim', !!id);
+    Object.values(nodes).forEach((n) => n.classList.remove('rel', 'sel'));
+    Object.values(paths).forEach((p) => p.el.classList.remove('rel'));
+    if (!id) { showChapter(); return; }
+    nodes[id].classList.add('rel', 'sel');
+    Object.values(paths).forEach((p) => { if (p.a === id || p.b === id) { p.el.classList.add('rel'); nodes[p.a].classList.add('rel'); nodes[p.b].classList.add('rel'); } });
+    showNode(id);
+  }
+  let hoverTimer;
+  Object.entries(nodes).forEach(([id, n]) => {
+    n.setAttribute('aria-describedby', 'detail');
+    n.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(hoverTimer); hoverTimer = setTimeout(() => select(id), sel ? 0 : 60); });
+    n.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(hoverTimer); hoverTimer = setTimeout(() => select(pinned), 80); });
+    n.addEventListener('focus', () => select(id));
+    n.addEventListener('blur', () => setTimeout(() => { if (!stage.contains(document.activeElement)) select(pinned); }, 0));
+    n.addEventListener('click', () => { pinned = id; select(id); });
+    n.addEventListener('keydown', (e) => {
+      const down = ['ArrowRight', 'ArrowDown'].includes(e.key), up = ['ArrowLeft', 'ArrowUp'].includes(e.key);
+      if (e.key === 'Escape') { pinned = null; n.blur(); select(null); return; }
+      if (!down && !up) return;
+      e.preventDefault();
+      const nb = EDGES.filter(([a, b]) => (down ? a === id : b === id)).map(([a, b]) => (down ? b : a));
+      if (nb.length) nodes[nb[0]].focus();
+    });
+  });
+  document.addEventListener('pointerdown', (e) => { if (!e.target.closest('.node') && !e.target.closest('.controls')) { pinned = null; select(null); } });
+
+  // packets slow near the cursor
+  stage.addEventListener('pointermove', (e) => { if (e.pointerType !== 'mouse') return; const r = grid.getBoundingClientRect(); mouse = { x: e.clientX - r.left, y: e.clientY - r.top }; });
+  stage.addEventListener('pointerleave', () => (mouse = null));
+
+  // controls
+  const playBtn = $('#play');
+  const ICON = { play: '<svg viewBox="0 0 12 12"><path d="M3 1.5v9l7-4.5z"/></svg>', pause: '<svg viewBox="0 0 12 12"><path d="M2.5 1.5h2.5v9H2.5zM7 1.5h2.5v9H7z"/></svg>' };
+  function setPlaying(v) { playing = v; playBtn.innerHTML = v ? ICON.pause : ICON.play; playBtn.setAttribute('aria-label', v ? 'Pause' : 'Play'); last = 0; }
+  playBtn.addEventListener('click', () => setPlaying(!playing));
+  const track = $('#track');
+  const chapEls = CH.map((c, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chap';
+    b.innerHTML = `<span class="tk"><i></i></span><span class="lbl">${String(i + 1).padStart(2, '0')}<span class="n"> ${c.k}</span></span>`;
+    b.setAttribute('aria-label', `Chapter ${i + 1}: ${c.k}`);
+    b.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); const j = Math.max(0, Math.min(CH.length - 1, i + (e.key === 'ArrowRight' ? 1 : -1))); chapEls[j].focus(); jump(j); } });
+    b.addEventListener('click', (e) => { if (e.detail === 0) jump(i); });
+    track.appendChild(b); return b;
+  });
+  function jump(i) { const c = CH[i]; t = playing ? c.s : c.s + (c.e - c.s) * 0.55; pk.forEach((q) => (q.lag = 0)); render(); }
+  // scrub: drag anywhere on the track; a click without drag jumps to the chapter start
+  let drag = null;
+  track.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, was: playing, moved: false, target: e.target }; track.setPointerCapture(e.pointerId); });
+  track.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    if (!drag.moved && Math.abs(e.clientX - drag.x) < 4) return;
+    drag.moved = true; if (playing) setPlaying(false);
+    const r = track.getBoundingClientRect(); t = clamp((e.clientX - r.left) / r.width) * T; pk.forEach((q) => (q.lag = 0)); render();
+  });
+  track.addEventListener('pointerup', (e) => {
+    if (!drag) return;
+    if (!drag.moved) { const i = chapEls.findIndex((el) => el.contains(drag.target)); if (i >= 0) jump(i); }
+    else if (drag.was) setPlaying(true);
+    drag = null;
+  });
+  fig.addEventListener('keydown', (e) => { if (e.key === ' ' && e.target === fig) { e.preventDefault(); setPlaying(!playing); } });
+
+  // theme
+  const themeBtn = $('#theme');
+  const modes = ['auto', 'light', 'dark'];
+  let mode = new URLSearchParams(location.search).get('theme') || 'auto';
+  const dark = matchMedia('(prefers-color-scheme: dark)');
+  function applyTheme() {
+    const root = document.documentElement;
+    root.removeAttribute('data-theme'); root.classList.remove('auto-dark');
+    if (mode === 'auto') { if (dark.matches) root.classList.add('auto-dark'); } else root.dataset.theme = mode;
+    themeBtn.textContent = 'Theme: ' + mode;
+  }
+  themeBtn.addEventListener('click', () => { mode = modes[(modes.indexOf(mode) + 1) % 3]; applyTheme(); });
+  dark.addEventListener('change', applyTheme);
+  applyTheme();
+
+  // clock
+  function frame(now) {
+    if (playing && visible && last) {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      t += dt; if (t >= T) { t -= T; pk.forEach((q) => (q.lag = 0)); }
+      for (const q of pk) { // packets near the cursor crawl, then catch up
+        let f = 1;
+        if (mouse && q.pos && q.g.style.display !== 'none') f = 0.35 + 0.65 * smooth(24, 72, Math.hypot(q.pos.x - mouse.x, q.pos.y - mouse.y));
+        if (f < 1) q.lag += dt * (1 - f); else if (q.lag > 0) q.lag = Math.max(0, q.lag - dt * 0.6);
+      }
+      render();
+    }
+    last = now; requestAnimationFrame(frame);
+  }
+  new IntersectionObserver(([en]) => { visible = en.isIntersecting; last = 0; }).observe(fig);
+  document.addEventListener('visibilitychange', () => { visible = !document.hidden; last = 0; });
+  reduced.addEventListener('change', () => { fig.classList.toggle('reduced', reduced.matches); if (reduced.matches) { setPlaying(false); t = 3.2; render(); } });
+
+  setPlaying(playing);
+  new ResizeObserver(layout).observe(grid);
+  document.fonts && document.fonts.ready.then(layout);
+  layout();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
