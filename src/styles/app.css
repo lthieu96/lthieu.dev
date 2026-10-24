@@ -2,6 +2,7 @@
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
 @import "@fontsource-variable/newsreader/opsz-italic.css";
+@import "@fontsource-variable/caveat";
 
 /* Signature only. "Sign Style DEMO" by Redy Studio, subset to A–Z, a–z and space. */
 @font-face {
@@ -64,6 +65,8 @@
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
   --font-serif: "Newsreader Variable", ui-serif, Georgia, serif;
   --font-hand: "Sign Style", cursive;
+  /* Handwriting on the GreenMaster paper report figure. Loads only where it is used. */
+  --font-script: "Caveat Variable", cursive;
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
@@ -193,6 +196,31 @@
 @keyframes fade-in {
   from {
     opacity: 0;
+  }
+}
+
+/* Text that changes in place (architecture figures, see Swap in architecture/shared.tsx): the old
+   words drift up into a blur while the new ones rise out of one, in the same spot. */
+@keyframes text-in {
+  from {
+    opacity: 0;
+    translate: 0 3px;
+    filter: blur(2px);
+  }
+}
+
+/* A link that draws itself along its path. Needs pathLength="1" and stroke-dasharray 1. */
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes text-out {
+  to {
+    opacity: 0;
+    translate: 0 -3px;
+    filter: blur(2px);
   }
 }
 

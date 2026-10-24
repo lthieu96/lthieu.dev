@@ -1,4 +1,7 @@
 import { Image as ImageIcon, Play } from 'lucide-react'
+import { CerebroArchitecture } from '@/components/architecture/cerebro'
+import { GreenMasterArchitecture } from '@/components/architecture/greenmaster'
+import { SwayArchitecture } from '@/components/architecture/sway'
 import { Arrow } from '@/components/layout'
 import { DitherField } from '@/components/shaders/dither-field'
 import type { CaseStudy, CaseStudyMedia, CaseStudySection } from '@/data/projects'
@@ -185,10 +188,12 @@ function RequestBudget() {
   )
 }
 
-const figures = { 'request-budget': RequestBudget } satisfies Record<
-  NonNullable<CaseStudySection['figure']>,
-  () => React.ReactNode
->
+const figures = {
+  'request-budget': RequestBudget,
+  'sway-architecture': SwayArchitecture,
+  'cerebro-architecture': CerebroArchitecture,
+  'greenmaster-paper': GreenMasterArchitecture,
+} satisfies Record<NonNullable<CaseStudySection['figure']>, () => React.ReactNode>
 
 export function Sections({ sections }: { sections: CaseStudySection[] }) {
   return (

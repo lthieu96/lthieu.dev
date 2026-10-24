@@ -32,8 +32,8 @@ export type CaseStudySection = {
   heading: string
   body?: string
   items?: { title: string; body: string }[]
-  /** A custom figure rendered after the body. See `components/case-study/figures.tsx`. */
-  figure?: 'request-budget'
+  /** A custom figure rendered after the body. See `figures` in `components/case-study.tsx`. */
+  figure?: 'request-budget' | 'sway-architecture' | 'cerebro-architecture' | 'greenmaster-paper'
 }
 
 export type CaseStudy = {
@@ -155,7 +155,7 @@ export const projects: Project[] = [
             },
             {
               title: 'A feed of finished trades',
-              body: 'A separate service listens for completed trades and matches each one to the right user, with alerts when it falls behind.',
+              body: 'With a teammate: a service that listens for completed trades and matches each one to the right user, with alerts when it falls behind.',
             },
             {
               title: 'Rewards paid on-chain',
@@ -166,6 +166,11 @@ export const projects: Project[] = [
               body: 'Screens across the Expo app: the feed, positions, notifications and the swipe itself.',
             },
           ],
+        },
+        {
+          heading: 'How an order travels',
+          body: 'From the swipe to the exchange and back, then the fees out to creators. Hover or tap a part to see what it does and who built it.',
+          figure: 'sway-architecture',
         },
         {
           heading: 'What I learned',
@@ -244,6 +249,11 @@ export const projects: Project[] = [
               body: 'The product grew to 200K+ users, with 7K+ daily active users, while I worked on it.',
             },
           ],
+        },
+        {
+          heading: 'How a sync travels',
+          body: 'From a connected account to the numbers on screen, then live prices on top. Hover or tap a part to see what it does and who built it.',
+          figure: 'cerebro-architecture',
         },
         {
           heading: 'What I learned',
@@ -339,13 +349,18 @@ export const projects: Project[] = [
             },
             {
               title: 'The web admin',
-              body: 'A React app for the office: customers, sites, contacts, staff by region, chemicals, and every report, with PDF export.',
+              body: 'A React app for the office: customers, sites, contacts, staff by region, chemicals, and every report.',
             },
             {
               title: 'The backend',
               body: 'A Rails 8 API with roles, email invitations for new staff, and search across reports by number, site or contact.',
             },
           ],
+        },
+        {
+          heading: 'From paper to rows',
+          body: 'Every box on the old paper report has a home in the database. Hover a field or a column to see where it goes.',
+          figure: 'greenmaster-paper',
         },
         {
           heading: 'What I learned',
