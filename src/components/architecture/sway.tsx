@@ -1,8 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import NumberFlow from '@number-flow/react'
+import { type CSSProperties, useEffect, useRef, useState } from 'react'
 import {
   ArchFigure,
   clamp,
+  curve,
   Detail,
+  Dot,
   ease,
   LIVE_FILL,
   MINE,
@@ -15,8 +18,9 @@ import {
   wave,
 } from './shared'
 
-// Port of design/architecture/sway/index.html (variant A, node map). Public labels only: no
-// internal service names, vendors or workarounds.
+// Variant A (node map) from design/architecture/sway/index.html, built like the Cerebro figure:
+// HTML cards in a grid, and an SVG layer on top whose edges are measured from the cards. Public
+// labels only: no internal service names, vendors or workarounds.
 
 type Who = 'me' | 'co' | 'worked' | 'team' | 'ext'
 const WHO: Record<Who, string> = {
@@ -81,86 +85,115 @@ const NODES = {
 type NodeId = keyof typeof NODES
 const NODE_IDS = Object.keys(NODES) as NodeId[]
 
-const WIDE_EDGES = {
-  cards: 'M348 120 V192',
-  order: 'M212 228 H260',
-  push: 'M260 252 H212',
-  lane: 'M436 240 H484',
-  send: 'M660 240 H700',
-  fill: 'M772 288 C772 390 738 424 660 424',
-  match: 'M484 424 C426 424 400 390 400 288',
-  fees: 'M312 288 C312 400 290 448 212 448',
-  claim: 'M124 372 V288',
-  ticks: 'M772 192 C772 104 740 72 660 72',
-  prices: 'M528 24 C528 10 506 8 476 8 H176 C140 8 124 28 124 70 V192',
-  mark: 'M548 120 C548 160 420 152 420 192',
-}
-type Hop = keyof typeof WIDE_EDGES
+const HOPS = [
+  'cards',
+  'order',
+  'push',
+  'lane',
+  'send',
+  'fill',
+  'match',
+  'fees',
+  'claim',
+  'ticks',
+  'prices',
+  'mark',
+] as const
+type Hop = (typeof HOPS)[number]
 
-type Layout = {
-  vb: [number, number]
-  /** x, y, w, h in viewBox units. */
-  nodes: Record<NodeId, [number, number, number, number]>
-  edges: Partial<Record<Hop, string>>
-  labels: [string, number, number][]
-}
-
-// Narrower than NARROW, the map stacks; it drops the edge labels and the claim and mark edges.
-const LAYOUTS: Record<'wide' | 'narrow', Layout> = {
+const GRID = {
   wide: {
-    vb: [880, 500],
-    nodes: {
-      story: [260, 24, 176, 96],
-      price: [484, 24, 176, 96],
-      phone: [36, 192, 176, 96],
-      api: [260, 192, 176, 96],
-      gw: [484, 190, 176, 100],
-      hl: [700, 192, 144, 96],
-      fill: [484, 372, 176, 104],
-      rew: [36, 372, 176, 104],
-    },
-    edges: WIDE_EDGES,
-    labels: [
-      ['order', 218, 222],
-      ['push', 220, 268],
-      ['lane', 442, 234],
-      ['send', 666, 234],
-      ['fill', 780, 356],
-      ['matched', 418, 360],
-      ['fees', 236, 466],
-      ['claim', 132, 336],
-      ['cards', 356, 162],
-      ['live prices', 134, 100],
-      ['mark', 556, 146],
-      ['ticks', 780, 140],
-    ],
+    gridTemplateColumns: 'repeat(3, minmax(0,1fr)) minmax(0,0.85fr)',
+    gridTemplateAreas: '". story price ." "phone api gw hl" "rew . fill ."',
+    gap: '64px 44px',
   },
+  // Narrower than NARROW the map stacks in two columns and drops the claim and mark edges.
   narrow: {
-    vb: [360, 624],
-    nodes: {
-      phone: [16, 16, 150, 96],
-      story: [194, 16, 150, 96],
-      api: [16, 168, 150, 96],
-      fill: [194, 168, 150, 104],
-      gw: [16, 338, 150, 100],
-      hl: [194, 340, 150, 96],
-      rew: [16, 504, 150, 104],
-      price: [194, 504, 150, 96],
-    },
-    edges: {
-      order: 'M60 112 V168',
-      push: 'M110 168 V112',
-      cards: 'M269 112 C269 146 130 134 130 168',
-      lane: 'M91 264 V338',
-      send: 'M166 388 H194',
-      fill: 'M269 340 V272',
-      match: 'M194 216 H166',
-      fees: 'M16 240 C-4 240 -4 556 16 556',
-      ticks: 'M269 436 V504',
-      prices: 'M344 552 C356 552 356 540 356 510 V50 C356 18 340 6 310 6 H130 C102 6 91 10 91 16',
-    },
-    labels: [],
+    gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)',
+    gridTemplateAreas: '"phone story" "api fill" "gw hl" "rew price"',
+    gap: '44px 20px',
   },
+} satisfies Record<string, CSSProperties>
+
+type Box = { l: number; r: number; t: number; b: number; cx: number; cy: number }
+type Routes = { d: Partial<Record<Hop, string>>; labels: [string, number, number][] }
+
+/** A bend from one side to another: leaves along its first direction, lands along the second. */
+function bend(x1: number, y1: number, x2: number, y2: number, downFirst: boolean) {
+  const dx = x2 - x1
+  const dy = y2 - y1
+  return downFirst
+    ? `M${x1} ${y1} C${x1} ${y1 + 0.75 * dy} ${x1 + 0.3 * dx} ${y2} ${x2} ${y2}`
+    : `M${x1} ${y1} C${x1 + 0.7 * dx} ${y1} ${x2} ${y1 + 0.25 * dy} ${x2} ${y2}`
+}
+
+/** Up from one top, across above everything at `top`, and down into another top. */
+function over(x1: number, y1: number, x2: number, y2: number, top: number) {
+  const s = Math.sign(x2 - x1) || 1
+  const r = 24
+  return `M${x1} ${y1} V${top + r} C${x1} ${top} ${x1} ${top} ${x1 + s * r} ${top} H${x2 - s * r} C${x2} ${top} ${x2} ${top} ${x2} ${top + r} V${y2}`
+}
+
+/** Middle of the height two side-by-side cards share, so a straight link meets both. */
+const overlap = (a: Box, b: Box) => (Math.max(a.t, b.t) + Math.min(a.b, b.b)) / 2
+
+/** Every edge and label, from the measured cards. Two layouts, same story. */
+function route(n: Record<NodeId, Box>, narrow: boolean, width: number): Routes {
+  const { story, price, phone, api, gw, hl, fill, rew } = n
+  if (narrow) {
+    const y = overlap(gw, hl)
+    const my = overlap(fill, api)
+    const rx = width + 10 // the price line runs down the right edge, outside the cards
+    const top = phone.t - 16
+    return {
+      d: {
+        order: `M${phone.cx - 24} ${phone.b} V${api.t}`,
+        push: `M${api.cx + 8} ${api.t} V${phone.b}`,
+        cards: curve(story.cx, story.b, api.cx + 40, api.t, false),
+        lane: `M${api.cx} ${api.b} V${gw.t}`,
+        send: `M${gw.r} ${y} H${hl.l}`,
+        fill: `M${hl.cx} ${hl.t} V${fill.b}`,
+        match: `M${fill.l} ${my} H${api.r}`,
+        fees: `M${api.l} ${api.cy} C${api.l - 16} ${api.cy} ${rew.l - 16} ${rew.cy} ${rew.l} ${rew.cy}`,
+        ticks: `M${hl.cx} ${hl.b} V${price.t}`,
+        prices: `M${price.r} ${price.cy} H${rx - 16} C${rx} ${price.cy} ${rx} ${price.cy} ${rx} ${price.cy - 16} V${top + 16} C${rx} ${top} ${rx} ${top} ${rx - 16} ${top} H${phone.cx + 16} C${phone.cx} ${top} ${phone.cx} ${top} ${phone.cx} ${top + 16} V${phone.t}`,
+      },
+      labels: [],
+    }
+  }
+  const oy = api.cy - 12
+  const py = api.cy + 12
+  const top = Math.min(story.t, price.t) - 18
+  return {
+    d: {
+      cards: `M${story.cx - 24} ${story.b} V${api.t}`,
+      mark: curve(price.cx, price.b, api.cx + 40, api.t, false),
+      order: `M${phone.r} ${oy} H${api.l}`,
+      push: `M${api.l} ${py} H${phone.r}`,
+      lane: `M${api.r} ${api.cy} H${gw.l}`,
+      send: `M${gw.r} ${hl.cy} H${hl.l}`,
+      fill: bend(hl.cx, hl.b, fill.r, fill.cy, true),
+      match: bend(fill.l, fill.cy, api.cx + 40, api.b, false),
+      fees: bend(api.cx - 40, api.b, rew.r, rew.cy, true),
+      claim: `M${rew.cx} ${rew.t} V${phone.b}`,
+      ticks: bend(hl.cx, hl.t, price.r, price.cy, true),
+      prices: over(price.cx - 30, price.t, phone.cx, phone.t, top),
+    },
+    labels: [
+      ['order', phone.r + 6, oy - 6],
+      ['push', phone.r + 6, py + 14],
+      ['lane', api.r + 6, api.cy - 6],
+      ['send', gw.r + 6, hl.cy - 6],
+      ['cards', story.cx - 16, (story.b + api.t) / 2 + 4],
+      ['mark', price.cx + 8, price.b + 18],
+      ['ticks', hl.cx + 8, (hl.t + price.cy) / 2],
+      ['fill', hl.cx + 8, (hl.b + fill.cy) / 2],
+      ['matched', fill.l - 64, fill.cy + 18],
+      ['fees', rew.r + 10, rew.cy + 18],
+      ['claim', rew.cx + 8, (rew.t + phone.b) / 2 + 4],
+      ['live prices', phone.cx + 8, (top + phone.t) / 2 + 4],
+    ],
+  }
 }
 
 type Stage = {
@@ -260,6 +293,8 @@ const stageEnd = (i: number) =>
   starts[i] + STAGES[i].hops.length * STAGES[i].ms + (STAGES[i].hold ?? 0)
 const LAST_END = stageEnd(STAGES.length - 1) + GAP
 LOOP += REST
+/** When the fees hop reaches the contract and the claimable amount goes up. */
+const FEES_LAND = starts[STAGES.length - 1] + STAGES[STAGES.length - 1].ms
 
 const stageAt = (t: number) => {
   let i = 0
@@ -281,7 +316,12 @@ type View = {
   /** Nodes the current stage's packet is passing through, space-separated. */
   active: string
   lane: boolean
+  /** Price step: live prices and the sparkline move once per STEP_MS. */
+  step: number
+  claimed: boolean
 }
+const sameView = (a: View, b: View) =>
+  (Object.keys(a) as (keyof View)[]).every((k) => a[k] === b[k])
 
 // What the nodes show. Sample data: no real wallets, users or prices.
 const HEADLINES = ['ETF inflows surge', 'New L2 goes live', 'Fed holds rates']
@@ -299,43 +339,72 @@ const FILLS = ['0x91…7c SOL short', '0xa4…e2 BTC long', '0x5d…09 ETH short
 const SWAY_FILL = '0x3f…a1 ETH long'
 const CLAIM = [12.4, 12.82]
 const SPARK_POINTS = 24
-const STEP_MS = 700 // live prices and the sparkline move once per step
+const STEP_MS = 700
 
-const sparkPoints = (step: number, x: number, y: number, w: number) =>
+const sparkPoints = (step: number) =>
   Array.from(
     { length: SPARK_POINTS },
-    (_, i) =>
-      `${(x + (i * w) / (SPARK_POINTS - 1)).toFixed(1)},${(y + 12 - wave(step + i)).toFixed(1)}`,
+    (_, i) => `${((i * 100) / (SPARK_POINTS - 1)).toFixed(1)},${(12 - wave(step + i)).toFixed(1)}`,
   ).join(' ')
-const ethPrice = (step: number) =>
-  (3412.5 + wave(step) * 0.8).toLocaleString('en-US', {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  })
+const ethPrice = (step: number) => Math.round((3412.5 + wave(step) * 0.8) * 10) / 10
+
 /** Sway: how an order makes the round trip. Hover, focus or tap a part for what it does. */
 export function SwayArchitecture() {
   const frameRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
+  const nodeRefs = useRef<Partial<Record<NodeId, HTMLButtonElement>>>({})
   const barRefs = useRef<HTMLElement[]>([])
   // Reduced motion: a still of the order on the exchange, stepped by hand.
   const { reduce, clock, renderRef, playing, setPlaying } = useFigureClock(frameRef, {
     still: stageEnd(3),
     ambient: true,
   })
-  const [layout, setLayout] = useState<'wide' | 'narrow'>('wide')
-  const [view, setView] = useState<View>({ stage: 0, round: 0, active: '', lane: false })
-  const { sel, bind } = useSelection<NodeId>(svgRef)
-  const L = LAYOUTS[layout]
+  const [narrow, setNarrow] = useState(false)
+  const [routes, setRoutes] = useState<Routes>({ d: {}, labels: [] })
+  const [view, setView] = useState<View>({
+    stage: 0,
+    round: 0,
+    active: '',
+    lane: false,
+    step: 0,
+    claimed: false,
+  })
+  const { sel, bind } = useSelection<NodeId>(stageRef)
 
+  // Measure the cards and route the edges between them.
   useEffect(() => {
-    const el = frameRef.current
-    if (!el) return
-    const ro = new ResizeObserver(() => setLayout(el.clientWidth < NARROW ? 'narrow' : 'wide'))
-    ro.observe(el)
+    const stage = stageRef.current
+    const frame = frameRef.current
+    if (!stage || !frame) return
+    const measure = () => {
+      const isNarrow = frame.clientWidth < NARROW
+      setNarrow(isNarrow)
+      const S = stage.getBoundingClientRect()
+      const boxes = {} as Record<NodeId, Box>
+      for (const id of NODE_IDS) {
+        const r = nodeRefs.current[id]?.getBoundingClientRect()
+        if (!r) return
+        const l = r.left - S.left
+        const t = r.top - S.top
+        boxes[id] = {
+          l,
+          t,
+          r: l + r.width,
+          b: t + r.height,
+          cx: l + r.width / 2,
+          cy: t + r.height / 2,
+        }
+      }
+      setRoutes(route(boxes, isNarrow, S.width))
+    }
+    const ro = new ResizeObserver(measure)
+    ro.observe(stage)
+    ro.observe(frame)
     return () => ro.disconnect()
   }, [])
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: a new layout swaps the paths, so lengths are re-measured
+  // biome-ignore lint/correctness/useExhaustiveDependencies: new routes move the paths, so lengths are re-measured
   useEffect(() => {
     const svg = svgRef.current
     if (!svg) return
@@ -351,10 +420,6 @@ export function SwayArchitecture() {
     const ticks = [...svg.querySelectorAll<SVGCircleElement>('.tick')]
     const tickHops = (['ticks', 'prices'] as const).filter((k) => paths[k])
     const tickTotal = tickHops.reduce((a, k) => a + (lens[k] ?? 0), 0)
-    const live = (k: string) => svg.querySelector<SVGElement>(`[data-live=${k}]`)
-    const px = live('px')
-    const spark = live('spark')
-    const claim = live('claim')
 
     const render = () => {
       const t = clock.current % LOOP
@@ -414,24 +479,6 @@ export function SwayArchitecture() {
         c.setAttribute('opacity', '0.6')
       })
 
-      // Live readouts: prices step on their own, the claimable amount grows when fees land.
-      const step = reduce ? 0 : Math.floor(performance.now() / STEP_MS)
-      const set = (el: SVGElement | null, text: string) => {
-        if (el && el.textContent !== text) el.textContent = text
-      }
-      set(px, ethPrice(step))
-      if (spark) {
-        const { x, y, w } = spark.dataset
-        const pts = sparkPoints(step, Number(x), Number(y), Number(w))
-        if (spark.getAttribute('points') !== pts) spark.setAttribute('points', pts)
-      }
-      if (claim) {
-        const last = STAGES.length - 1
-        const landed = starts[last] + STAGES[last].ms // the fees hop has reached the contract
-        const p = t < starts[last] ? 0 : reduce ? 1 : ease(clamp((t - landed) / 400))
-        set(claim, `$${(CLAIM[0] + (CLAIM[1] - CLAIM[0]) * p).toFixed(2)}`)
-      }
-
       const s = STAGES[cur]
       const end = stageEnd(cur)
       const next: View = {
@@ -439,19 +486,14 @@ export function SwayArchitecture() {
         round: Math.floor(clock.current / LOOP),
         active: !resting && t < end + GAP ? s.nodes.join(' ') : '',
         lane: !!s.lane && t < end + GAP,
+        step: reduce ? 0 : Math.floor(performance.now() / STEP_MS),
+        claimed: t >= FEES_LAND,
       }
-      setView((v) =>
-        v.stage === next.stage &&
-        v.active === next.active &&
-        v.round === next.round &&
-        v.lane === next.lane
-          ? v
-          : next,
-      )
+      setView((v) => (sameView(v, next) ? v : next))
     }
     renderRef.current = render
     render()
-  }, [layout, reduce, clock, renderRef])
+  }, [routes, reduce, clock, renderRef])
 
   // Playing: run from the step's start. Paused: show it done, with the packet at the far end.
   const jump = (i: number) => {
@@ -464,8 +506,8 @@ export function SwayArchitecture() {
   const relEdges = new Set(relStages.flatMap((s) => s.hops))
   const active = new Set(view.active.split(' '))
   const stage = STAGES[view.stage]
-  const narrow = layout === 'narrow'
   const n = sel && NODES[sel]
+  const edges = HOPS.filter((h) => routes.d[h])
 
   return (
     <ArchFigure
@@ -474,111 +516,96 @@ export function SwayArchitecture() {
       narrow={narrow}
       frameRef={frameRef}
     >
-      {/* biome-ignore lint/a11y/useSemanticElements: an <svg> can't be a <fieldset>; role="img" would hide the node buttons inside */}
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${L.vb[0]} ${L.vb[1]}`}
-        role="group"
-        aria-label="Sway system map: phone app, API, rate-limit gateway, Hyperliquid, fill stream, price feed, story pipeline and rewards contract"
-        className="block h-auto w-full overflow-visible"
-      >
-        <g>
-          {Object.entries(L.edges).map(([k, d]) => (
-            <path
-              key={k}
-              d={d}
-              data-k={k}
-              className={`edge fill-none transition-[stroke,opacity] duration-150 ease-(--ease-out) [vector-effect:non-scaling-stroke] ${relEdges.has(k as Hop) ? 'stroke-accent' : 'stroke-subtle/45'} ${sel && !relEdges.has(k as Hop) ? 'opacity-25' : ''}`}
-            />
-          ))}
-        </g>
-        <g>
-          {Object.entries(L.edges).map(([k, d]) => (
-            <path
-              key={k}
-              d={d}
-              data-k={k}
-              pathLength={1}
-              strokeDasharray={1}
-              strokeDashoffset={1}
-              className="trail fill-none stroke-accent [vector-effect:non-scaling-stroke]"
-            />
-          ))}
-        </g>
-        {L.labels.map(([label, x, y]) => (
-          <text
-            key={label}
-            x={x}
-            y={y}
-            className={`fill-subtle font-mono text-[11px] transition-opacity duration-150 ${sel ? 'opacity-25' : ''}`}
-          >
-            {label}
-          </text>
-        ))}
-        {[0, 1, 2].map((i) => (
-          <circle key={i} r={2} opacity={0} className="tick fill-subtle" />
-        ))}
-        {NODE_IDS.map((id) => {
-          const node = NODES[id]
-          const [x, y, w, h] = L.nodes[id]
-          const on = active.has(id) || sel === id
-          return (
-            // biome-ignore lint/a11y/useSemanticElements: an SVG group can't be a <button>
-            <g
-              key={id}
-              {...bind(id)}
-              data-node={id}
-              tabIndex={0}
-              role="button"
-              aria-label={`${node.lab}, ${WHO[node.who]}`}
-              aria-describedby="sway-arch-detail"
-              className={`group cursor-pointer outline-none transition-opacity duration-150 ease-(--ease-out) ${sel && !relNodes.has(id) ? 'opacity-35' : ''}`}
-            >
-              <rect
-                x={x + 0.5}
-                y={y + 0.5}
-                width={w - 1}
-                height={h - 1}
-                rx={8}
-                className={`transition-[fill,stroke] ease-(--ease-out) [vector-effect:non-scaling-stroke] group-focus-visible:[stroke-width:2] ${on ? 'duration-150' : 'duration-700'}`}
+      <div ref={stageRef} className={`relative ${narrow ? 'pt-4' : 'pt-6'}`}>
+        <div className="grid items-center" style={GRID[narrow ? 'narrow' : 'wide']}>
+          {NODE_IDS.map((id) => {
+            const node = NODES[id]
+            const live = active.has(id)
+            const on = live || sel === id
+            return (
+              <button
+                key={id}
+                ref={(el) => {
+                  if (el) nodeRefs.current[id] = el
+                }}
+                type="button"
+                data-node={id}
+                aria-label={`${node.lab}, ${WHO[node.who]}`}
+                aria-describedby="sway-arch-detail"
+                {...bind(id)}
                 style={{
-                  fill: active.has(id)
+                  gridArea: id,
+                  background: live
                     ? LIVE_FILL
                     : node.who === 'ext'
                       ? 'var(--color-well)'
                       : 'var(--color-card)',
-                  stroke: on
+                  borderColor: on
                     ? 'var(--color-accent)'
                     : isMine(node.who)
                       ? MINE
                       : 'var(--color-edge)',
                 }}
-              />
-              <text x={x + 12} y={y + 24} className="fill-fg text-[13px] font-medium">
-                {node.lab}
-              </text>
-              <text x={x + 12} y={y + 41} className="fill-muted font-mono text-[12px]">
-                {node.sub}
-              </text>
-              {isMine(node.who) ? (
-                <circle cx={x + w - 15} cy={y + 20} r={3} className="fill-accent" />
-              ) : (
-                node.who !== 'ext' && (
-                  <circle
-                    cx={x + w - 15}
-                    cy={y + 20}
-                    r={2.5}
-                    className="fill-none stroke-subtle [vector-effect:non-scaling-stroke]"
-                  />
-                )
-              )}
-              <NodeLive id={id} x={x + 12} y={y + 54} w={w - 24} view={view} />
-            </g>
-          )
-        })}
-        <circle r={10} opacity={0} className="packet fill-accent/12" />
-        <circle r={4} opacity={0} className="packet fill-accent" />
-      </svg>
+                className={`relative flex w-full min-w-0 cursor-pointer flex-col rounded-lg border px-3 pt-2.5 pb-3 text-left transition-[opacity,border-color,background-color] ease-(--ease-out) ${on ? 'duration-150' : 'duration-700'} ${sel && !relNodes.has(id) ? 'opacity-35' : ''}`}
+              >
+                {/* Long names wrap rather than truncate in the narrow layout. */}
+                <span className="flex items-start justify-between gap-2">
+                  <span className="font-medium text-fg">{node.lab}</span>
+                  {node.who !== 'ext' && (
+                    <span className="flex h-[1lh] items-center">
+                      <Dot mine={isMine(node.who)} />
+                    </span>
+                  )}
+                </span>
+                <span className="font-mono text-meta text-muted">{node.sub}</span>
+                <span className="mt-2.5 block">
+                  <NodeLive id={id} view={view} />
+                </span>
+              </button>
+            )
+          })}
+        </div>
+        <svg
+          ref={svgRef}
+          aria-hidden
+          className="pointer-events-none absolute inset-0 size-full overflow-visible"
+        >
+          {edges.map((k) => (
+            <path
+              key={k}
+              d={routes.d[k]}
+              data-k={k}
+              className={`edge fill-none transition-[stroke,opacity] duration-150 ease-(--ease-out) ${relEdges.has(k) ? 'stroke-accent' : 'stroke-subtle/45'} ${sel && !relEdges.has(k) ? 'opacity-25' : ''}`}
+            />
+          ))}
+          {edges.map((k) => (
+            <path
+              key={k}
+              d={routes.d[k]}
+              data-k={k}
+              pathLength={1}
+              strokeDasharray={1}
+              strokeDashoffset={1}
+              className="trail fill-none stroke-accent"
+            />
+          ))}
+          {routes.labels.map(([label, x, y]) => (
+            <text
+              key={label}
+              x={x}
+              y={y}
+              className={`fill-subtle font-mono text-[11px] transition-opacity duration-150 ${sel ? 'opacity-25' : ''}`}
+            >
+              {label}
+            </text>
+          ))}
+          {[0, 1, 2].map((i) => (
+            <circle key={i} r={2} opacity={0} className="tick fill-subtle" />
+          ))}
+          <circle r={10} opacity={0} className="packet fill-accent/12" />
+          <circle r={4} opacity={0} className="packet fill-accent" />
+        </svg>
+      </div>
 
       <Track
         playing={playing}
@@ -611,190 +638,143 @@ export function SwayArchitecture() {
   )
 }
 
-const mono = 'font-mono text-[11px]'
-const slide = { transition: 'transform 240ms var(--ease-out), opacity 240ms var(--ease-out)' }
+// One line each, never wrapping, so a node keeps its height whatever the log says.
+const mono = 'font-mono text-[11px] leading-[16px] whitespace-nowrap'
+const slide: CSSProperties = {
+  transition: 'translate 240ms var(--ease-out), opacity 240ms var(--ease-out)',
+}
+/** A small inset card inside a node; the accent edge means it is the part in play. */
+const chipCard = (on: boolean) =>
+  `block truncate whitespace-nowrap rounded-md border bg-well px-2 py-1 text-[11px] leading-[18px] transition-[border-color] ease-(--ease-out) ${on ? 'border-accent duration-150' : 'border-edge duration-700'}`
 
-/** The small live UI inside each node, starting at (x, y), `w` wide. It follows the stage. */
-function NodeLive({
-  id,
-  x,
-  y,
-  w,
-  view,
-}: {
-  id: NodeId
-  x: number
-  y: number
-  w: number
-  view: View
-}) {
-  const { stage, round, lane } = view
+/** The small live UI inside each node. It follows the stage. */
+function NodeLive({ id, view }: { id: NodeId; view: View }) {
+  const { stage, round, lane, step, claimed } = view
   const headline = HEADLINES[round % HEADLINES.length]
   switch (id) {
     case 'story':
       return (
-        <g>
-          <rect
-            x={x + 0.5}
-            y={y + 0.5}
-            width={w - 1}
-            height={27}
-            rx={6}
-            className={`fill-well transition-[stroke] [vector-effect:non-scaling-stroke] ${stage === 0 ? 'stroke-accent duration-150' : 'stroke-edge duration-700'}`}
-          />
-          <Swap as="g" k={round}>
-            <text x={x + 8} y={y + 18} className="fill-fg text-[11px]">
-              {headline}
-            </text>
+        <span className={chipCard(stage === 0)}>
+          <Swap k={round} className="text-fg">
+            {headline}
           </Swap>
-        </g>
+        </span>
       )
     case 'phone': {
       // The card slides right on the swipe, then turns into the order's status.
       const [label, tone] =
         stage === 0
-          ? [headline, 'fill-muted']
+          ? [headline, 'text-muted']
           : stage === 1
-            ? ['Bullish ↗', 'fill-accent']
+            ? ['Bullish ↗', 'text-accent']
             : stage < 6
-              ? ['Order pending', 'fill-muted']
-              : ['✓ Filled 0.5 ETH', 'fill-fg']
+              ? ['Order pending', 'text-muted']
+              : ['✓ Filled 0.5 ETH', 'text-fg']
       return (
-        <g style={{ ...slide, transform: `translateX(${stage === 1 ? 12 : 0}px)` }}>
-          <rect
-            x={x + 0.5}
-            y={y + 0.5}
-            width={w - 13}
-            height={27}
-            rx={6}
-            className={`fill-well transition-[stroke] duration-240 [vector-effect:non-scaling-stroke] ${stage === 1 || stage >= 6 ? 'stroke-accent' : 'stroke-edge'}`}
-          />
-          <Swap as="g" k={label}>
-            <text x={x + 8} y={y + 18} className={`text-[11px] ${tone}`}>
-              {label}
-            </text>
+        <span
+          className={`${chipCard(stage === 1 || stage >= 6)} mr-3`}
+          style={{ ...slide, translate: stage === 1 ? '12px 0' : '0 0' }}
+        >
+          <Swap k={label} className={tone}>
+            {label}
           </Swap>
-        </g>
+        </span>
       )
     }
     case 'api':
       return (
         // A two-line log: each new entry pushes the last one up.
-        <Swap as="g" k={stage} className={mono}>
-          {stage > 0 && (
-            <text x={x} y={y + 12} className="fill-subtle">
-              {API_LOG[stage - 1]}
-            </text>
-          )}
-          <text x={x} y={y + 28} className="fill-fg">
-            {API_LOG[stage]}
-          </text>
+        <Swap as="span" k={stage} className={mono}>
+          <span className="grid">
+            <span className="truncate text-subtle">
+              {stage > 0 ? API_LOG[stage - 1] : '\u00a0'}
+            </span>
+            <span className="truncate text-fg">{API_LOG[stage]}</span>
+          </span>
         </Swap>
       )
     case 'gw':
       return (
         <>
-          <Lanes x={x} y={y + 2} inner={w - 4} wide={lane} />
-          <Swap as="g" k={String(lane)}>
-            <text x={x} y={y + 26} className={`${mono} ${lane ? 'fill-accent' : 'fill-subtle'}`}>
-              {lane ? 'trade → lane 1' : 'prices · sync'}
-            </text>
+          {/* The gateway's three request lanes; trading's lane widens while an order passes. */}
+          <span className="flex h-1 gap-0.5">
+            {[lane ? 66 : 55, lane ? 22 : 30, lane ? 12 : 15].map((g, i) => (
+              <i
+                // biome-ignore lint/suspicious/noArrayIndexKey: three fixed lanes
+                key={i}
+                className="block rounded-full transition-[flex-grow] duration-240 ease-(--ease-out)"
+                style={{ flexGrow: g, background: `var(--color-lane-${i + 1})` }}
+              />
+            ))}
+          </span>
+          <Swap k={String(lane)} className={`mt-2 ${mono} ${lane ? 'text-accent' : 'text-subtle'}`}>
+            {lane ? 'trade → lane 1' : 'prices · sync'}
           </Swap>
         </>
       )
     case 'hl':
       return (
-        <g className={mono}>
-          <text x={x} y={y + 12} className="fill-muted tabular-nums">
-            ETH <tspan data-live="px">{ethPrice(0)}</tspan>
-          </text>
-          <Swap as="g" k={stage < 3 ? 0 : Math.min(stage, 4)}>
-            <text
-              x={x}
-              y={y + 28}
-              className={stage === 3 ? 'fill-accent' : stage > 3 ? 'fill-fg' : 'fill-subtle'}
-            >
-              {stage < 3 ? 'book live' : stage === 3 ? 'order in book' : 'filled @ 3,412'}
-            </text>
+        <span className={`grid ${mono}`}>
+          <span className="text-muted tabular-nums">
+            ETH <NumberFlow value={ethPrice(step)} format={{ minimumFractionDigits: 1 }} />
+          </span>
+          <Swap
+            k={stage < 3 ? 0 : Math.min(stage, 4)}
+            className={stage === 3 ? 'text-accent' : stage > 3 ? 'text-fg' : 'text-subtle'}
+          >
+            {stage < 3 ? 'book live' : stage === 3 ? 'order in book' : 'filled @ 3,412'}
           </Swap>
-        </g>
+        </span>
       )
     case 'fill': {
       // A new fill slides in on top; on match, everything that isn't a Sway wallet fades.
       const rows = stage >= 4 ? [SWAY_FILL, ...FILLS.slice(0, 2)] : FILLS
       return (
-        <g className={mono}>
+        <span className={`relative block h-12 ${mono}`}>
           {rows.map((r, i) => {
             const mine = r === SWAY_FILL
             return (
-              <g
+              <span
                 key={r}
-                className={mine && stage === 4 ? textIn : ''}
+                className={`absolute inset-x-0 top-0 truncate ${mine ? 'text-accent' : 'text-muted'} ${mine && stage === 4 ? textIn : ''}`}
                 style={{
                   ...slide,
-                  transform: `translateY(${i * 15}px)`,
+                  translate: `0 ${i * 16}px`,
                   opacity: stage >= 5 && !mine ? 0.35 : 1,
                 }}
               >
-                <text x={x} y={y + 12} className={mine ? 'fill-accent' : 'fill-muted'}>
-                  {mine && stage >= 5 ? `✓ ${r}` : r}
-                </text>
-              </g>
+                {mine && stage >= 5 ? `✓ ${r}` : r}
+              </span>
             )
           })}
-        </g>
+        </span>
       )
     }
     case 'rew':
       return (
-        <>
-          <text x={x} y={y + 12} className={`${mono} fill-subtle`}>
-            claimable
-          </text>
-          <text
-            data-live="claim"
-            x={x}
-            y={y + 34}
-            className="fill-fg text-[17px] font-medium tabular-nums"
-          >
-            ${CLAIM[0].toFixed(2)}
-          </text>
-        </>
+        <span className="grid">
+          <span className={`${mono} text-subtle`}>claimable</span>
+          <span className="text-[17px] font-medium text-fg tabular-nums">
+            <NumberFlow
+              value={claimed ? CLAIM[1] : CLAIM[0]}
+              format={{ style: 'currency', currency: 'USD' }}
+            />
+          </span>
+        </span>
       )
     case 'price':
       return (
-        <polyline
-          data-live="spark"
-          data-x={x}
-          data-y={y}
-          data-w={w}
-          points={sparkPoints(0, x, y, w)}
-          className="fill-none stroke-muted [vector-effect:non-scaling-stroke]"
-        />
+        <svg
+          aria-hidden
+          viewBox="-1 -1 102 26"
+          preserveAspectRatio="none"
+          className="block h-6 w-full"
+        >
+          <polyline
+            points={sparkPoints(step)}
+            className="fill-none stroke-muted [vector-effect:non-scaling-stroke]"
+          />
+        </svg>
       )
   }
-}
-
-/** The gateway's three request lanes; trading's lane widens while an order passes. */
-function Lanes({ x, y, inner, wide }: { x: number; y: number; inner: number; wide: boolean }) {
-  const shares = [0.55, 0.3, 0.15]
-  let lx = x
-  return shares.map((f, i) => {
-    const w = inner * f
-    const rect = (
-      <rect
-        // biome-ignore lint/suspicious/noArrayIndexKey: fixed list
-        key={i}
-        x={lx}
-        y={y}
-        width={i === 0 && wide ? w + 6 : w}
-        height={4}
-        rx={2}
-        className="transition-[width] duration-240 ease-(--ease-out)"
-        style={{ fill: `var(--color-lane-${i + 1})` }}
-      />
-    )
-    lx += w + 2
-    return rect
-  })
 }
