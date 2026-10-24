@@ -1,6 +1,6 @@
 #version 300 es
-// Ported from design/dither-flow.glsl (margin-only mode). Lengths are in CSS px and scaled by
-// u_pixelRatio, so cells stay 2px on every screen.
+// Ported from design/shaders/halftone-drift.glsl, without the pointer term. Lengths are in CSS px
+// and scaled by u_pixelRatio, so the dot pitch stays the same on every screen.
 // mediump to match the library vertex shader; it upgrades both to highp where mediump is weak.
 precision mediump float;
 
@@ -8,8 +8,8 @@ uniform vec2 u_resolution;
 uniform float u_pixelRatio;
 uniform float u_time;
 
-uniform vec2 u_mouse; // CSS px from the top-left; far away when there's no pointer
-uniform float u_cell;
+uniform float u_pitch;
+uniform float u_scale;
 uniform float u_density;
 uniform float u_inkStrength;
 uniform float u_speed;
@@ -31,43 +31,32 @@ float noise(vec2 p) {
 
 float fbm(vec2 p) {
   float v = 0.0, a = 0.5;
-  for (int i = 0; i < 5; i++) { v += a * noise(p); p = p * 2.03 + 17.0; a *= 0.5; }
+  for (int i = 0; i < 4; i++) { v += a * noise(p); p = p * 2.03 + 17.0; a *= 0.5; }
   return v;
 }
 
-// Ordered-dither threshold (Bayer 8x8) in [0,1)
-float bayer2(vec2 a) { a = floor(a); return fract(dot(a, vec2(0.5, a.y * 0.75))); }
-float bayer4(vec2 a) { return bayer2(0.5 * a) * 0.25 + bayer2(a); }
-float bayer8(vec2 a) { return bayer4(0.5 * a) * 0.25 + bayer2(a); }
-
 void main() {
-  float cellPx = u_cell * u_pixelRatio;
-  vec2 cell = floor(gl_FragCoord.xy / cellPx);
-  vec2 uv = (cell * cellPx + 0.5 * cellPx) / u_resolution;
-  // noise scale in CSS px, matched to the ~2500px-tall page frame in the design
-  vec2 p = (cell * cellPx + 0.5 * cellPx) / u_pixelRatio / 2500.0;
+  float pr = u_pixelRatio;
+  vec2 frag = gl_FragCoord.xy;
+  // 45 degree print screen: dots sit on a rotated grid, one per cell
+  mat2 rot = mat2(0.7071, -0.7071, 0.7071, 0.7071);
+  float pitch = u_pitch * pr;
+  vec2 g = rot * frag;
+  vec2 cg = (floor(g / pitch) + 0.5) * pitch;
+  vec2 c = cg * rot; // cell centre back in screen space
+
+  // clear behind the middle (colHalf 0 clears only a thin centre line), fading out at the bottom
+  float dx = abs(c.x - 0.5 * u_resolution.x) - u_colHalf * pr;
+  float mask = smoothstep(0.0, u_feather * pr, dx) * smoothstep(0.0, 0.35, c.y / u_resolution.y);
+
+  // tone comes in clouds: open paper between them, so the field never reads as a flat screen
+  vec2 p = c / (u_scale * pr);
   float t = u_time * u_speed;
+  vec2 q = vec2(fbm(p + vec2(t, 0.0)), fbm(p + vec2(5.2, -t)));
+  float v = smoothstep(0.42, 0.72, fbm(p * 1.6 + 1.6 * q)) * u_density * mask;
 
-  // domain-warped flow: reads like a slow data terrain
-  vec2 q = vec2(fbm(p * 1.6 + vec2(t, 0.0)), fbm(p * 1.6 + vec2(5.2, -t)));
-  float v = fbm(p * 2.2 + 2.4 * q + vec2(t * 0.5, 0.0));
-
-  // the pointer lifts density locally
-  vec2 m = vec2(u_mouse.x, u_resolution.y / u_pixelRatio - u_mouse.y) * u_pixelRatio / u_resolution;
-  float lift = 0.1 * exp(-12.0 * dot(uv - m, uv - m));
-
-  // margin-only: nothing behind the content column, feathered at its edges, fading out at the bottom
-  float dx = abs(gl_FragCoord.x - 0.5 * u_resolution.x) - u_colHalf * u_pixelRatio;
-  float mask = smoothstep(0.0, u_feather * u_pixelRatio, dx) * smoothstep(0.0, 0.35, uv.y);
-  float d = clamp((v - (1.0 - u_density)) * 2.2 + lift, 0.0, 1.0) * mask;
-
-  // strict > so zero-density cells never light up
-  float on = d > bayer8(cell) + 0.002 ? 1.0 : 0.0;
-
-  // square dots with a 1 CSS px gutter, LED-style
-  vec2 f = fract(gl_FragCoord.xy / cellPx);
-  float dotMask = step(1.0 / u_cell, f.x) * step(1.0 / u_cell, f.y);
-
-  vec3 ink = mix(u_bg, u_ink, u_inkStrength);
-  fragColor = vec4(mix(u_bg, ink, on * dotMask), 1.0);
+  // dot size carries the tone, so the feather becomes dots shrinking to nothing
+  float r = 0.45 * pitch * sqrt(v);
+  float dotA = 1.0 - smoothstep(r - 0.6 * pr, r + 0.6 * pr, length(g - cg));
+  fragColor = vec4(mix(u_bg, u_ink, dotA * step(0.001, v) * u_inkStrength), 1.0);
 }

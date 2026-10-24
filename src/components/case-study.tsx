@@ -72,7 +72,7 @@ export function Media({ media }: { media: CaseStudyMedia }) {
           <DitherField
             colHalf={0}
             feather={240}
-            inkStrength={0.14}
+            inkStrength={0.1}
             background="media"
             className="absolute inset-0 -z-10"
           />
