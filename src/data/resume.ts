@@ -7,6 +7,7 @@ export const resume = {
   headline: `${site.role} · Ho Chi Minh City`,
   contact: [
     { label: site.email, href: `mailto:${site.email}` },
+    { label: '+84 961 500 817', href: 'tel:+84961500817' },
     { label: 'github.com/lthieu96', href: socialHref('GitHub') },
     { label: 'linkedin.com/in/lthieu96', href: socialHref('LinkedIn') },
     { label: 'lthieu.dev', href: site.url },
@@ -43,7 +44,8 @@ export const resume = {
       title: 'Madeezi · Freelance Full-Stack Developer',
       when: '2025 – 2026',
       bullets: [
-        'Built GreenMaster Go, an end-to-end ERP for **3,800+ customers** and **200 technicians**: web admin, Expo phone app and a Rails backend that replaced paper reports.',
+        'Built GreenMaster Go for **3,800+ customers** and **200 technicians**: Rails API, React admin and Expo app ([case study](https://lthieu.dev/work/greenmaster)).',
+        'Customers sign off each visit on the technician’s phone, by signature or a one-time code via Zalo or SMS.',
       ],
     },
     {
@@ -63,8 +65,9 @@ export const resume = {
     },
   ],
   skills: [
+    { label: 'Languages', value: 'TypeScript, JavaScript, Ruby, SQL, Rust, Solidity' },
     { label: 'Frontend', value: 'React, Next.js, React Native / Expo' },
-    { label: 'Backend', value: 'Node.js, NestJS, Express, Rails, Rust' },
+    { label: 'Backend', value: 'Node.js, NestJS, Express, Rails' },
     { label: 'Data', value: 'MongoDB, Redis, PostgreSQL' },
     { label: 'Infra', value: 'Docker, GCP, GitHub Actions, Sentry' },
   ],

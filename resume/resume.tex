@@ -1,0 +1,126 @@
+% Hieu Le · one-page résumé, A4.
+% Mirrors the /resume page (src/routes/resume.tsx): one column, Geist throughout. Hierarchy comes
+% from size, weight and tone only. Sizes are the page's px × 0.75 (CSS px to pt).
+%
+% Build:  tectonic resume.tex        (or: xelatex resume.tex)
+% Restyle: everything you'd want to change is in the "Style" block below.
+
+\documentclass[a4paper]{article}
+\usepackage[top=14.8mm,bottom=12mm,left=16.9mm,right=16.9mm]{geometry}
+\usepackage{fontspec}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\frenchspacing  % one space after colons and periods, like the page
+\raggedright    % left-aligned, not justified, like the page
+
+% ─── Style ───────────────────────────────────────────────────────────────────
+\setmainfont{Geist}[
+  Path = fonts/, Extension = .otf,
+  UprightFont = *-Regular, BoldFont = *-SemiBold,
+  FontFace = {m}{n}{*-Medium},
+  Numbers = Lining,
+]
+\newcommand{\medium}{\fontseries{m}\selectfont}  % Geist Medium (500)
+\newcommand{\semibold}{\bfseries}                  % Geist SemiBold (600)
+
+\definecolor{ink}{HTML}{1A1A1A}      % headings, names, bold numbers
+\definecolor{body}{HTML}{3D3D3D}     % bullet text, a shade lighter than headings
+\definecolor{role}{HTML}{555555}     % headline, contact
+\definecolor{sub}{HTML}{666666}      % what follows "·" in a title
+\definecolor{date}{HTML}{777777}     % dates, skill keys
+\definecolor{label}{HTML}{8A8A8A}    % section labels
+\definecolor{dot}{HTML}{999999}      % bullet dots
+\definecolor{hair}{HTML}{E5E5E5}     % rule under the header
+
+\newlength{\secgap}\setlength{\secgap}{16.5pt}     % between sections (22px)
+\newcommand{\sz}[1]{\fontsize{#1}{1.5\dimexpr #1\relax}\selectfont}
+\newcommand{\hi}[1]{{\semibold\color{ink}#1}}       % a number worth seeing at a glance
+
+\color{ink}
+
+% ─── Building blocks ─────────────────────────────────────────────────────────
+\newcommand{\cvsection}[1]{%
+  \par\vspace{\secgap}%
+  {\sz{7.9pt}\semibold\color{label}\addfontfeatures{LetterSpace=13}\MakeUppercase{#1}}\par\vspace{6pt}}
+
+% A title row: #1 size, #2 name (with its weight), #3 what follows "·", #4 date on the right.
+\newcommand{\titlerow}[4]{%
+  \noindent{\sz{#1}#2}\ifx\relax#3\relax\else{\sz{#1}\color{sub}\nobreakspace·\space#3}\fi
+  \hfill{\sz{9pt}\color{date}#4}\par}
+
+\newcommand{\job}[3]{\par\addvspace{7.5pt}\titlerow{10.5pt}{\semibold #1}{#2}{#3}\vspace{3pt}}       % company · role
+\newcommand{\product}[3]{\par\addvspace{4.5pt}\titlerow{9.4pt}{\medium #1}{#2}{#3}\vspace{3pt}}
+
+\setlist[itemize]{label={\color{dot}•}, leftmargin=10pt, labelsep=4.5pt,
+  itemsep=3pt, parsep=0pt, topsep=0pt, partopsep=0pt}
+\newenvironment{points}{\begin{itemize}\sz{9pt}\color{body}}{\end{itemize}}
+
+\newcommand{\skill}[2]{\noindent\makebox[69pt][l]{\color{date}#1}{#2}\par\vspace{3pt}}
+
+% ─── Content ─────────────────────────────────────────────────────────────────
+\begin{document}
+
+% Header
+\begin{minipage}[b]{0.6\linewidth}
+  {\fontsize{21pt}{24pt}\selectfont\semibold\addfontfeatures{LetterSpace=-2.1}Hieu Le}\par\vspace{1.5pt}
+  {\sz{9.75pt}\color{role}Full-Stack Developer · Ho Chi Minh City}
+\end{minipage}\hfill
+\begin{minipage}[b]{0.4\linewidth}\raggedleft\sz{9pt}\color{role}
+  \href{mailto:lthieu9601@gmail.com}{lthieu9601@gmail.com}\\
+  \href{tel:+84961500817}{+84 961 500 817}\\
+  \href{https://github.com/lthieu96}{github.com/lthieu96}\\
+  \href{https://linkedin.com/in/lthieu96}{linkedin.com/in/lthieu96}\\
+  \href{https://lthieu.dev}{lthieu.dev}
+\end{minipage}
+\par\vspace{10.5pt}{\color{hair}\hrule height .75pt}
+
+\cvsection{Summary}
+{\sz{9.4pt}Full-stack developer with 3+ years of experience. I build products end to end: web apps,
+mobile apps and the backend that keeps them running, most recently for a crypto app with \hi{200K+ users}.}
+
+\cvsection{Experience}
+\job{KVY Technology}{Software Engineer}{2025 – now}
+\product{Cerebro (\href{https://cerebro.xyz}{cerebro.xyz})}{crypto portfolio tracker}{2025 – 2026}
+\begin{points}
+  \item Built the Next.js web app and Node.js backend as the product grew to \hi{200K+ users} and \hi{7K+ daily active users}.
+  \item Built data collection across \hi{8 exchanges} and \hi{6 on-chain platforms}, plus the admin dashboard the team used to watch it.
+\end{points}
+\product{Sway (\href{https://sway.fun}{sway.fun})}{narrative trading app}{2026 – now}
+\begin{points}
+  \item Built a Rust service that shares the exchange’s request limit so trades always go first.
+  \item Wrote the Solidity contract that pays fee rewards on Arbitrum, plus the backend that batches and checks payouts.
+  \item Split completed-trade matching into its own service with lag alerts; built notifications and app screens in Expo.
+\end{points}
+
+\job{Madeezi}{Freelance Full-Stack Developer}{2025 – 2026}
+\begin{points}
+  \item Built GreenMaster Go for \hi{3,800+ customers} and \hi{200 technicians}: Rails API, React admin and Expo app (\href{https://lthieu.dev/work/greenmaster}{case study}).
+  \item Customers sign off each visit on the technician’s phone, by signature or a one-time code via Zalo or SMS.
+\end{points}
+
+\job{BenKon}{Software Engineer}{2024 – 2025}
+\begin{points}
+  \item Re-architected the admin dashboard, cutting page load time by \hi{30\%}.
+  \item Shipped the BenKon App and Surface App for device control and meeting rooms; built a CMS, i18n system and icon library.
+\end{points}
+
+\job{BenKon}{Front-end Developer Intern}{2023 – 2024}
+\begin{points}
+  \item Built an interactive floor-plan and equipment layout editor in React and SVG, solo.
+\end{points}
+
+\cvsection{Skills}
+\sz{9pt}
+\skill{Languages}{TypeScript, JavaScript, Ruby, SQL, Rust, Solidity}
+\skill{Frontend}{React, Next.js, React Native / Expo}
+\skill{Backend}{Node.js, NestJS, Express, Rails}
+\skill{Data}{MongoDB, Redis, PostgreSQL}
+\skill{Infra}{Docker, GCP, GitHub Actions, Sentry}
+
+\cvsection{Education}
+\titlerow{9.4pt}{\medium University of Information Technology, VNUHCM}{Software Engineering, Very Good}{2019 – 2025}
+
+\end{document}

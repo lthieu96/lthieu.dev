@@ -17,7 +17,7 @@ export const Route = createFileRoute('/resume')({
 
 function Heading({ children }: { children: ReactNode }) {
   return (
-    <h2 className="text-[10px]/[1.5] font-semibold tracking-[1.2px] text-[#8a8a8a] uppercase">
+    <h2 className="text-[10.5px]/[1.5] font-semibold tracking-[1.4px] text-[#8a8a8a] uppercase">
       {children}
     </h2>
   )
@@ -35,7 +35,7 @@ function Rich({ text }: { text: string }) {
     // biome-ignore-start lint/suspicious/noArrayIndexKey: split parts never reorder
     if (bold)
       return (
-        <strong key={i} className="font-semibold">
+        <strong key={i} className="font-semibold text-[#1a1a1a]">
           {bold[1]}
         </strong>
       )
@@ -54,7 +54,7 @@ function Bullets({ bullets }: { bullets: string[] }) {
   return (
     <ul className="flex flex-col gap-1">
       {bullets.map((b) => (
-        <li key={b} className="flex gap-1.5 text-[12px]/[1.5]">
+        <li key={b} className="flex gap-1.5 text-[12px]/[1.5] text-[#3d3d3d]">
           <span aria-hidden className="text-[#999]">
             •
           </span>
@@ -69,21 +69,41 @@ function Bullets({ bullets }: { bullets: string[] }) {
 
 type Group = { title: string; when: string; bullets: string[] }
 
-function Entry({ title, when, bullets, groups }: Group & { groups?: Group[] }) {
+/** "Name · what it is": the name leads, the rest steps back. */
+function Title({ text, className }: { text: string; className: string }) {
+  const [name, ...rest] = text.split(' · ')
+  return (
+    <h3 className={className}>
+      <Rich text={name} />
+      {rest.length > 0 && (
+        <span className="font-normal text-[#666]">
+          {' · '}
+          <Rich text={rest.join(' · ')} />
+        </span>
+      )}
+    </h3>
+  )
+}
+
+const when = 'shrink-0 text-[12px]/[1.5] text-[#777] tabular-nums'
+
+/**
+ * Hierarchy comes from size, weight and tone only: the company (14px semibold), a product under it
+ * (12.5px medium), then the bullets (12px, a shade lighter so the headings carry the page).
+ */
+function Entry({ title, when: date, bullets, groups }: Group & { groups?: Group[] }) {
   return (
     <div className="flex flex-col gap-1 pb-1.5">
-      <div className="flex justify-between gap-4">
-        <h3 className="text-[13px]/[1.5] font-semibold">{title}</h3>
-        <span className="shrink-0 text-[12px]/[1.5] text-[#777]">{when}</span>
+      <div className="flex items-baseline justify-between gap-4">
+        <Title text={title} className="text-[14px]/[1.4] font-semibold tracking-[-0.1px]" />
+        <span className={when}>{date}</span>
       </div>
       {bullets.length > 0 && <Bullets bullets={bullets} />}
       {groups?.map((g) => (
         <div key={g.title} className="mt-0.5 flex flex-col gap-1">
-          <div className="flex justify-between gap-4 text-[12px]/[1.5]">
-            <h4 className="font-medium">
-              <Rich text={g.title} />
-            </h4>
-            <span className="shrink-0 text-[#777]">{g.when}</span>
+          <div className="flex items-baseline justify-between gap-4">
+            <Title text={g.title} className="text-[12.5px]/[1.5] font-medium" />
+            <span className={when}>{g.when}</span>
           </div>
           <Bullets bullets={g.bullets} />
         </div>
@@ -105,7 +125,7 @@ function Resume() {
       >
         <header className="flex items-end justify-between border-[#e5e5e5] border-b pb-3.5">
           <div className="flex flex-col gap-0.5">
-            <h1 className="text-[24px]/[1.2] font-semibold tracking-[-0.4px]">{resume.name}</h1>
+            <h1 className="text-[28px]/[1.15] font-semibold tracking-[-0.6px]">{resume.name}</h1>
             <p className="text-[13px]/[1.5] text-[#555]">{resume.headline}</p>
           </div>
           <ul className="flex flex-col items-end gap-px text-[12px]/[1.5] text-[#555]">
@@ -125,7 +145,7 @@ function Resume() {
 
         <section className="flex flex-col gap-2">
           <Heading>Summary</Heading>
-          <p className="text-[12px]/[1.5]">
+          <p className="text-[12.5px]/[1.55]">
             <Rich text={resume.summary} />
           </p>
         </section>
@@ -151,9 +171,9 @@ function Resume() {
 
         <section className="flex flex-col gap-2">
           <Heading>Education</Heading>
-          <div className="flex justify-between gap-4 text-[12px]/[1.5]">
-            <span className="font-medium">{resume.education.title}</span>
-            <span className="shrink-0 text-[#777]">{resume.education.when}</span>
+          <div className="flex items-baseline justify-between gap-4">
+            <Title text={resume.education.title} className="text-[12.5px]/[1.5] font-medium" />
+            <span className={when}>{resume.education.when}</span>
           </div>
         </section>
       </article>
