@@ -1,6 +1,7 @@
 import { type PaperShaderElement, ShaderMount } from '@paper-design/shaders-react'
 import { type RefObject, useEffect, useMemo, useRef } from 'react'
 import type { DitherTone } from '@/data/projects'
+import { useAfterPaint } from '@/lib/after-paint'
 import { useTheme } from '@/lib/theme'
 import { useReducedMotion } from '@/lib/use-media-query'
 import fragmentShader from './dither-image.frag?raw'
@@ -28,7 +29,7 @@ type Props = DitherTone & {
 }
 
 /** An image shown as a 4-tone dither (or in colour) that resolves into colour or clears when `revealed`. */
-export function DitherImage({
+function Shader({
   src,
   alt,
   revealed,
@@ -113,5 +114,18 @@ export function DitherImage({
       fragmentShader={fragmentShader}
       uniforms={uniforms}
     />
+  )
+}
+
+/**
+ * Empty for the first frame, so a page transition isn't held back by WebGL setup (see
+ * useAfterPaint); the shader takes over from the next frame.
+ */
+export function DitherImage(props: Props) {
+  const ready = useAfterPaint()
+  return ready ? (
+    <Shader {...props} />
+  ) : (
+    <div role="img" aria-label={props.alt} className={props.className} />
   )
 }

@@ -1,5 +1,6 @@
 import { ShaderMount } from '@paper-design/shaders-react'
 import { useMemo } from 'react'
+import { useAfterPaint } from '@/lib/after-paint'
 import { cssColor, useTheme } from '@/lib/theme'
 import { useMediaQuery, useReducedMotion } from '@/lib/use-media-query'
 import fragmentShader from './dither-field.frag?raw'
@@ -26,6 +27,7 @@ export function DitherField({
   background = 'bg',
   className,
 }: Props) {
+  const ready = useAfterPaint()
   const reduced = useReducedMotion()
   const theme = useTheme()
   // Recomputed on theme change; `theme` is only a dependency, cssColor reads the live tokens.
@@ -36,7 +38,7 @@ export function DitherField({
       u_density: 0.5,
       // Dark dots on paper read stronger than light dots on black.
       u_inkStrength: theme === 'light' ? inkStrength * 0.7 : inkStrength,
-      u_speed: 0.03,
+      u_speed: 0.16,
       u_colHalf: colHalf,
       u_feather: feather,
       u_bg: cssColor(background),
@@ -45,6 +47,7 @@ export function DitherField({
     [colHalf, feather, inkStrength, background, theme],
   )
 
+  if (!ready) return null
   return (
     <ShaderMount
       aria-hidden
@@ -67,6 +70,7 @@ export function PageDither() {
  * grain, gathered in the sparse sweeping bands of the warp shape (design/shaders/warp-dither.glsl).
  */
 function PageGrain() {
+  const ready = useAfterPaint()
   const reduced = useReducedMotion()
   const theme = useTheme()
   // Recomputed on theme change; `theme` is only a dependency, cssColor reads the live tokens.
@@ -85,6 +89,7 @@ function PageGrain() {
     [theme],
   )
 
+  if (!ready) return null
   return (
     <ShaderMount
       aria-hidden

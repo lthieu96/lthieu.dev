@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { SimpleIcon } from 'simple-icons'
+import { useAfterPaint } from '@/lib/after-paint'
 import { cssColor, type Theme, useTheme } from '@/lib/theme'
 import { useReducedMotion } from '@/lib/use-media-query'
 import fragmentShader from './particle-logo.frag?raw'
@@ -38,8 +39,6 @@ const K = 90 // spring stiffness
 const C = 14 // damping (ratio ~0.74: a little overshoot)
 const F = 160 // pointer repel strength
 const IDLE_MS = 3000
-// WCAG 2.2.2: unprompted motion stops after a few cycles, until the next hover or scroll-in.
-const IDLE_CYCLES = 5
 const LIVELY_MS = IDLE_MS + 2000 // how long the sway keeps going after anything happens
 
 // WCAG relative luminance and contrast, for brand colours that would vanish on the page.
@@ -67,7 +66,20 @@ function brand(hex: string, bg: number[], light: boolean) {
  * same grid keeps the particle density even; sorting by angle means particle i lands at a
  * similar angle in every logo, so morphs travel locally.
  */
-function sample({ icon, weight }: Logo, g: number) {
+function sample(logo: Logo, g: number) {
+  // Cached per logo and grid: coming back to the page would otherwise rasterise every logo again,
+  // ~35ms, right in the page transition.
+  const byGrid = samples.get(logo) ?? new Map<number, [number, number, number][]>()
+  samples.set(logo, byGrid)
+  const hit = byGrid.get(g)
+  if (hit) return hit
+  const cells = rasterise(logo, g)
+  byGrid.set(g, cells)
+  return cells
+}
+const samples = new WeakMap<Logo, Map<number, [number, number, number][]>>()
+
+function rasterise({ icon, weight }: Logo, g: number) {
   const cv = document.createElement('canvas')
   cv.width = cv.height = g
   const ctx = cv.getContext('2d', { willReadFrequently: true })!
@@ -215,7 +227,6 @@ function tile(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement, logos: Logo
   let pending = 0
   let onCount: (count: number) => void = () => {}
   let visible = false
-  let cycles = 0
   let changedAt = 0
   let livelyUntil = 0
   const ptr = { x: 0, y: 0, on: false, strength: 0 }
@@ -380,8 +391,7 @@ function tile(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement, logos: Logo
   const idle = setInterval(() => {
     const now = performance.now()
     if (shown !== null || reduced || !visible || document.hidden || ptr.on) return
-    if (cycles >= IDLE_CYCLES || now - changedAt < IDLE_MS) return
-    cycles++
+    if (now - changedAt < IDLE_MS) return
     show(random())
   }, 250)
 
@@ -430,7 +440,6 @@ function tile(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement, logos: Logo
   const io = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting
     if (!visible) return
-    cycles = 0 // scrolling back in resumes the cycling
     livelyUntil = performance.now() + LIVELY_MS
     wake()
   })
@@ -441,11 +450,10 @@ function tile(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement, logos: Logo
     wake()
   })
   ro.observe(canvas)
-  // Coming back to the tab (or to the page from the back/forward cache) starts it over: the
-  // cycle count resets and, with nothing picked, the next logo flies in right away.
+  // Coming back to the tab (or to the page from the back/forward cache): with nothing picked,
+  // the next logo flies in right away.
   const onReturn = () => {
     if (document.hidden) return
-    cycles = 0
     changedAt = 0
     livelyUntil = performance.now() + LIVELY_MS
     wake()
@@ -494,7 +502,6 @@ function tile(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement, logos: Logo
     },
     setShown(logo: number | null) {
       shown = logo
-      cycles = 0
       if (logo !== null && logo !== current) show(logo)
       else if (current < 0) show(Math.floor(Math.random() * logos.length))
     },
@@ -522,7 +529,7 @@ function tile(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement, logos: Logo
  * spring back. With nothing
  * shown it cycles at random while on screen. Reduced motion gets a still logo and instant swaps.
  */
-export function ParticleLogo({
+function Tile({
   logos,
   shown,
   touch,
@@ -562,4 +569,13 @@ export function ParticleLogo({
   useEffect(() => tile.current?.setShown(shown), [shown])
 
   return <div ref={ref} aria-hidden className={className} />
+}
+
+/**
+ * The tile is created the frame after the page first paints: building its WebGL context and
+ * sampling the logos inside a page transition would hold the transition back.
+ */
+export function ParticleLogo(props: Props) {
+  const ready = useAfterPaint()
+  return ready ? <Tile {...props} /> : <div aria-hidden className={props.className} />
 }

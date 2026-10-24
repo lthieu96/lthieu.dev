@@ -67,7 +67,9 @@ void main() {
     b = u_shade.z * (1.0 - 0.5 * layer / u_layers);
   }
   // Side -> mid -> brand -> highlight. Sides keep 60%+ of the brand colour, so dark brands
-  // (Express, Sentry) keep their hue instead of turning black.
+  // (Express, Sentry) keep their hue instead of turning black. The highlight is weaker on dark
+  // brands: on black, 40% white is the shadow's grey, and the sheen read as shadow on the face.
   float l = clamp(floor(b * 3.0 + bayer8(cell)), 0.0, 3.0) / 3.0;
-  v_col = l < 0.7 ? mix(a_col * 0.6, a_col, l * 1.5) : mix(a_col, vec3(1.0), 0.4);
+  float hi = 0.2 + 0.2 * max(a_col.r, max(a_col.g, a_col.b));
+  v_col = l < 0.7 ? mix(a_col * 0.6, a_col, l * 1.5) : mix(a_col, vec3(1.0), hi);
 }
