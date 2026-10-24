@@ -34,7 +34,6 @@
   --color-icon-shadow-soft: rgb(0 0 0 / 0.35);
   /* Case-study media frame. */
   --color-media: #141414;
-  --color-media-glow: #1a2420;
   /* Only for things you can click. */
   --color-accent: #8cc4f2;
   /* The three lanes in the Sway request-budget figure. */
@@ -86,7 +85,6 @@
   --color-icon-shadow: rgb(0 0 0 / 0.14);
   --color-icon-shadow-soft: rgb(0 0 0 / 0.1);
   --color-media: #f3f3f1;
-  --color-media-glow: #e6efea;
   --color-accent: #2f6fb0;
   --color-lane-1: #2f6fb0;
   --color-lane-2: #86a6c4;

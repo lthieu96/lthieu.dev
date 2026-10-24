@@ -44,10 +44,47 @@ export function Media({ media }: { media: CaseStudyMedia }) {
 
   return (
     <figure className="mx-auto w-full max-w-[920px] px-5">
-      {media.kind === 'image' ? (
-        <div
-          className={`${frame} bg-[radial-gradient(160%_160%_at_50%_0%,var(--color-media-glow),var(--color-media))] px-[4.5%] pt-[4.5%]`}
-        >
+      {media.kind === 'image' && media.phone ? (
+        // Web and phone side by side at the same height: flex-grow in their width ratios
+        // (1600×1000 and 720×1560 scaled to 1000 tall). Same dithered backdrop as the phones frame.
+        <div className={`${frame} relative isolate flex gap-[3%] bg-media p-[4.5%]`}>
+          <DitherField
+            colHalf={0}
+            feather={240}
+            inkStrength={0.14}
+            background="media"
+            className="absolute inset-0 -z-10"
+          />
+          <video
+            src={media.video}
+            poster={media.src}
+            aria-label={media.alt}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="block aspect-[16/10] min-w-0 flex-[1600] rounded-[10px] object-cover outline outline-1 outline-edge -outline-offset-1 max-sm:rounded-md"
+          />
+          <video
+            src={media.phone.src}
+            poster={media.phone.poster}
+            aria-label={media.phone.label}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="block aspect-[720/1560] min-w-0 flex-[462] rounded-[20px] border border-edge object-cover max-sm:rounded-lg"
+          />
+        </div>
+      ) : media.kind === 'image' ? (
+        <div className={`${frame} relative isolate bg-media px-[4.5%] pt-[4.5%]`}>
+          <DitherField
+            colHalf={0}
+            feather={240}
+            inkStrength={0.14}
+            background="media"
+            className="absolute inset-0 -z-10"
+          />
           {media.video ? (
             <video
               src={media.video}

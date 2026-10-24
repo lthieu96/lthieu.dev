@@ -18,6 +18,8 @@ export type CaseStudyMedia =
       caption?: string
       /** Looping mp4 shown in the same frame; `src` becomes its poster. 1600×1000. */
       video?: string
+      /** A phone clip (720×1560) beside the video, at the same height. */
+      phone?: { src: string; poster: string; label: string }
     }
   | {
       kind: 'phones'
@@ -40,8 +42,7 @@ export type CaseStudy = {
   links?: CaseStudyLink[]
   /** Headline numbers under the media. Public figures only. */
   stats?: { value: string; label: string }[]
-  /** Several are stacked, in order. */
-  media: CaseStudyMedia | CaseStudyMedia[]
+  media: CaseStudyMedia
   sections: CaseStudySection[]
 }
 
@@ -303,31 +304,23 @@ export const projects: Project[] = [
         { label: 'When', value: 'May 2025 – June 2026' },
         { label: 'Built with', value: 'Rails, React, Expo, PostgreSQL' },
       ],
-      media: [
-        {
-          kind: 'image',
-          // Recorded headless by /tmp/gmg-rec/run2.mjs on the live admin (the new report is cancelled), with client, staff and
-          // contact details swapped for sample data in the page (mask.js); the test report is real.
-          src: '/work/greenmaster/greenmaster-web-poster.webp',
-          video: '/work/greenmaster/greenmaster-web.mp4',
-          alt: 'GreenMaster Go web admin: filling in a new service report, a report’s details, customers and the service catalog',
-          caption: 'Client, staff and contact names replaced with sample data.',
+      media: {
+        kind: 'image',
+        // Web: recorded headless by /tmp/gmg-rec/run2.mjs on the live admin (the new report is
+        // cancelled), with client, staff and contact details swapped for sample data in the page
+        // (mask.js); the test report is real. Phone: cut from an iOS screen recording
+        // (~/Movies/gmg-raw/app.mp4) by /tmp/gmg-edit/build-app.sh: clock set to 9:41, recording dot
+        // hidden, other client sites in the search blurred.
+        src: '/work/greenmaster/greenmaster-web-poster.webp',
+        video: '/work/greenmaster/greenmaster-web.mp4',
+        alt: 'GreenMaster Go web admin: filling in a new service report, a report’s details, customers and the service catalog',
+        phone: {
+          src: '/work/greenmaster/greenmaster-app.mp4',
+          poster: '/work/greenmaster/greenmaster-app-poster.webp',
+          label: 'GreenMaster Go phone app: a visit, from new report to the customer’s signature',
         },
-        // Cut from an iOS screen recording (~/Movies/gmg-raw/app.mp4) by /tmp/gmg-edit/build-app.sh:
-        // clock set to 9:41, recording dot hidden, other client sites in the search blurred.
-        {
-          kind: 'phones',
-          slots: [
-            {
-              label: 'A visit, from new report to the customer’s signature',
-              note: '17s loop',
-              src: '/work/greenmaster/greenmaster-app.mp4',
-              poster: '/work/greenmaster/greenmaster-app-poster.webp',
-            },
-          ],
-          caption: 'Other client sites in the search are blurred.',
-        },
-      ],
+        caption: 'Names and contacts replaced with sample data; other client sites blurred.',
+      },
       sections: [
         {
           heading: 'The idea',
