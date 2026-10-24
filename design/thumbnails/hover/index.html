@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Selected work · logo to app detail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Lexend:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+  :root { --bg:#fcfcfb; --fg:#1a1a1a; --muted:#6f6f6f; --subtle:#737373; --edge:rgb(0 0 0/.08); --well:#f3f3f1;
+          --site-ease:cubic-bezier(.65,0,.35,1) }
+  * { box-sizing:border-box; margin:0 }
+  body { background:var(--bg); color:var(--fg); font:15px/1.45 Geist, system-ui, sans-serif; padding:64px 20px }
+  main { max-width:600px; margin:0 auto }
+  .bar { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:16px; color:var(--subtle); font-size:13px }
+  .bar button { font:inherit; color:var(--fg); background:var(--well); border:1px solid var(--edge); border-radius:6px; padding:2px 10px; cursor:pointer }
+  h2 { font-size:13px; font-weight:400; color:var(--subtle); margin-bottom:8px }
+  .list.zoom { zoom:2 }
+  .row { display:flex; align-items:center; gap:18px; padding:12px 10px; border-radius:12px; text-decoration:none; color:inherit; transition:background .15s }
+  .row.active { background:var(--well) }
+  .text { flex:1; min-width:0 }
+  .top { display:flex; justify-content:space-between; gap:16px; align-items:baseline }
+  .years { font-size:13px; color:var(--subtle); font-variant-numeric:tabular-nums }
+  .sum { font-size:13.5px; color:var(--muted) }
+  .tags { font-size:12px; color:var(--subtle) }
+
+  /* Thumb: the app detail sits underneath; the logo wipes off to reveal it (the site's own 300ms wipe). */
+  .thumb { position:relative; width:128px; height:80px; flex-shrink:0; border-radius:8px; overflow:hidden; outline:1px solid var(--edge); outline-offset:-1px }
+  .logo { position:absolute; inset:0; background:center/cover; filter:grayscale(1) contrast(1.15) brightness(1.05);
+          clip-path:inset(0 0 0 0); transition:clip-path .3s var(--site-ease) .15s; z-index:2 }
+  .active .logo { clip-path:inset(0 0 0 100%); transition-delay:0s }
+  /* Each detail is built at the app's real size (384×240 pt) and scaled to the 128×80 thumb. */
+  .stage { position:absolute; left:0; top:0; width:384px; height:240px; transform:scale(calc(1/3)); transform-origin:0 0; overflow:hidden }
+
+  /* ── Sway · apps/mobile feed card, constants/theme.ts ── */
+  .sway { background:#fff; padding:16px; font-family:'SF Pro Rounded', ui-rounded, system-ui, sans-serif }
+  .sway svg.chart { display:block; width:352px; height:104px; overflow:visible }
+  .sway .pulse { fill:none; stroke:#3BB9FF; stroke-width:1.5; transform-box:fill-box; transform-origin:center; opacity:0 }
+  .active .sway .pulse { animation:pulse 1.5s cubic-bezier(.5,1,.89,1) .45s infinite }   /* Easing.out(quad), 1500ms, 1 → 3.5 */
+  @keyframes pulse { from { transform:scale(1); opacity:.5 } to { transform:scale(3.5); opacity:0 } }
+  .sway .split { display:flex; gap:3px; margin-top:8px }
+  .sway .split span { height:5px; border-radius:3px }
+  .sway .amounts { display:flex; justify-content:space-between; margin-top:4px; font:600 12px/16px inherit; font-family:inherit }
+  .sway .btns { display:flex; gap:10px; margin-top:12px }
+  .sway .btn { position:relative; flex:1; height:48px; border-radius:9999px; display:flex; align-items:center; justify-content:center; gap:6px;
+               color:#fff; font:600 15px/1 inherit; font-family:inherit; letter-spacing:-.41px;
+               box-shadow:0 1px 1px rgba(24,24,27,.24), inset 0 1px 0 rgba(255,255,255,.2);
+               transition:transform .22s cubic-bezier(.33,1,.68,1), opacity .22s cubic-bezier(.33,1,.68,1) }
+  .sway .btn::before { content:''; position:absolute; inset:0; border-radius:inherit; background:linear-gradient(rgba(255,255,255,.16), transparent) }
+  .sway .btn svg { width:15px; height:15px }
+  .sway .bear { background:#DC2626; border:1px solid #DC2626 }
+  .sway .bull { background:#3B82F6; border:1px solid #2563EB }
+  .sway .btn.pressed { transform:scale(.985); opacity:.92; transition-duration:.12s }       /* 120ms in, 220ms out, Easing.out(cubic) */
+
+  /* ── Cerebro · apps/web Portfolio Breakdown, recharts donut ── */
+  .cerebro { background:#121216; font-family:Geist, sans-serif }
+  .cerebro .card { position:absolute; left:8px; top:8px; width:420px; height:280px; background:#19191D; border:1px solid rgba(255,255,255,.06); border-radius:16px }
+  .cerebro svg { position:absolute; left:20px; top:12px; width:216px; height:216px }
+  .cerebro .center { position:absolute; left:20px; top:12px; width:216px; height:216px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px }
+  .cerebro .name { font-weight:500; font-size:13px; color:#848590 }
+  .cerebro .value { font:500 20px Geist Mono; letter-spacing:-.01em; color:#fff }
+  .cerebro .pill { font:400 13px Geist Mono; color:#29F596; background:rgb(41 245 150/.1); padding:6px 8px; border-radius:24px; line-height:1 }
+  .cerebro .legend { position:absolute; left:252px; top:44px; width:124px; display:flex; flex-direction:column; gap:4px }
+  .cerebro .legend div { display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:8px; font-size:13px; color:#fff }
+  .cerebro .legend div:first-child { background:rgba(255,255,255,.05) }
+  .cerebro .legend i { width:12px; height:12px; border-radius:3px; flex-shrink:0 }
+  .cerebro .legend b { margin-left:auto; font:400 12px Geist Mono }
+
+  /* ── BenKon · admin dashboard, from screenshots only (no source) ── */
+  .benkon { background:#fff; font-family:Lexend, sans-serif; color:#111827 }
+  .benkon .tabs { position:absolute; left:16px; right:0; top:20px; display:flex; border-bottom:1px solid #E5E7EB; font-size:13px; font-weight:500 }
+  .benkon .tab { white-space:nowrap; display:flex; align-items:center; gap:7px; padding:10px 12px; border:1px solid transparent; border-bottom:0; border-radius:6px 6px 0 0; margin-bottom:-1px }
+  .benkon .tab.on { border-color:#E5E7EB; background:#fff }
+  .benkon .tab svg { width:17px; height:17px; stroke-width:1.6 }
+  .benkon .cards { position:absolute; left:16px; top:92px; display:flex; gap:14px }
+  .benkon .ac { width:296px; border:1px solid #E5E7EB; border-radius:6px; padding:12px 12px 10px }
+  .benkon .head { display:flex; align-items:center; gap:10px; font-size:13px; font-weight:600 }
+  .benkon .unit { width:32px; height:15px; border-radius:8px; background:linear-gradient(#fdfdfd,#e3e5e8); border:1px solid #d6d9de; position:relative }
+  .benkon .unit::after { content:''; position:absolute; left:5px; top:6px; width:9px; height:1.5px; border-radius:1px; background:#4589DF }
+  .benkon .head svg { margin-left:auto; width:15px; height:15px }
+  .benkon .stats { display:flex; align-items:center; gap:12px; margin:10px 0 0 42px; padding-top:10px; border-top:1px dashed #E5E7EB; font-size:12px; color:#4B5563 }
+  .benkon .stats span { display:flex; align-items:center; gap:4px }
+  .benkon .stats svg { width:14px; height:14px; color:#9CA3AF; stroke-width:1.5 }
+  .benkon .stats .w { margin-left:auto; font-weight:600 }
+  .benkon .upd { text-align:right; font-size:11px; color:#9CA3AF; margin-top:8px }
+
+  /* ── GreenMaster Go · gmg-mobile ServiceTypesField bottom sheet ── */
+  .greenmaster { background:#E7E8EA; font-family:Lexend, sans-serif }
+  .greenmaster .sheet { position:absolute; left:0; right:0; top:36px; height:260px; background:#fff; border-radius:24px 24px 0 0; padding:22px 28px 0;
+                        box-shadow:0 -4px 20px rgba(0,0,0,.1); transform:translateY(100%) }
+  .active .greenmaster .sheet { transform:none; transition:transform .25s cubic-bezier(.19,1,.22,1) .15s }   /* Android: 250ms Easing.out(exp) */
+  .greenmaster .title { display:flex; justify-content:space-between; align-items:center; font-size:18px; font-weight:500; color:#4B5563 }
+  .greenmaster .close { width:32px; height:32px; border-radius:99px; background:#F9FAFB; display:grid; place-items:center; color:#A4A7AE }
+  .greenmaster .close svg { width:20px; height:20px }
+  .greenmaster .grid { display:flex; flex-wrap:wrap; gap:12px; margin-top:20px }
+  .greenmaster .tile { width:calc(50% - 6px); padding:16px; border:1px solid #F3F4F6; border-radius:12px; display:flex; flex-direction:column; gap:20px;
+                       transition:opacity .25s }                                               /* TouchableOpacity press-out */
+  .greenmaster .tile.pressed { opacity:.7; transition-duration:.15s }                          /* activeOpacity 0.7 */
+  .greenmaster .tile.on { border-color:rgb(17 92 50/.5) }
+  .greenmaster .tile svg.ic { width:30px; height:30px; color:#535862 }
+  .greenmaster .lbl { display:flex; justify-content:space-between; align-items:center; font-size:16px; font-weight:500; color:#111827 }
+  .greenmaster .ind { width:16px; height:16px; stroke-width:3 }
+
+  @media (prefers-reduced-motion: reduce) {
+    .logo { transition:opacity .2s ease; clip-path:none } .active .logo { opacity:0; clip-path:none }
+    .stage *, .stage { animation:none !important; transition:none !important }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="bar"><span>Hover or tab through the rows. On touch, each row plays once in view.</span><button id="zoom">2×</button></div>
+  <h2>Selected work</h2>
+  <div class="list" id="list"></div>
+</main>
+
+<!-- GreenMaster's own icons, from madeezi/lucide/icons/{gmg,freud}. -->
+<template id="gm-icons">
+  <svg data-k="mouse" viewBox="0 0 24 24"><path d="M1.263 14.891c0-4.676 1.902-7.664 5.684-8.818 1.374-.419 2.436-1.076 2.436-2.404a2.42 2.42 0 0 0-4.06-1.793"/><path d="M14.255 14.891c-.751-.664-1.083-1.592-.553-2.726.387-.828 1.255-1.301 2.179-1.282 1.657.034 2.397 1.077 2.435 2.404.025.9 2.286 2.698 3.423 3.546a1.59 1.59 0 0 1 .637 1.273v.793a1.615 1.615 0 0 1-1.624 1.604H6.135c-3.832-.001-4.872-3.733-4.872-5.612 0-2.555 1.648-5.612 5.684-5.612 3.654 0 5.512.94 7.168 2.293"/><circle cx="16.692" cy="16.494" r=".807" fill="currentColor"/></svg>
+  <svg data-k="fly" viewBox="0 0 24 24"><path d="M14.302 15.11a4.8 4.8 0 0 0 1.449-.231c-.443 1.656-1.688 3.515-3.278 4.896-2.534 2.204-6.494 3.9-8.206 1.244-1.282-1.99.08-5.357 3.207-7.318a13.5 13.5 0 0 1 2.848-1.338c.295 1.554 1.956 2.747 3.98 2.747"/><path d="M14.302 8.645a4.8 4.8 0 0 1 1.449.232c-.443-1.658-1.688-3.515-3.278-4.897C9.94 1.776 5.98.08 4.268 2.736c-1.282 1.99.08 5.358 3.207 7.318a13.5 13.5 0 0 0 2.848 1.338c.295-1.553 1.955-2.748 3.979-2.747"/><path d="m15.5 15.63 2.843 2.713h2.424l1.617 1.616"/><path d="m15.5 8.124 2.843-2.712h2.424l1.617-1.616"/><path d="M15.918 1.371v1.617L13.695 5.21"/><path d="M15.918 22.384v-1.617l-2.223-2.223"/><path d="M16.727 11.877c0 1.786.904 3.233 2.02 3.233s2.02-1.447 2.02-3.233-.905-3.232-2.02-3.232-2.02 1.447-2.02 3.232"/><path d="M16.727 11.877c0-.844.207-1.607.539-2.182-.739-.642-1.788-1.05-2.964-1.05-2.231 0-4.041 1.447-4.041 3.232s1.81 3.233 4.04 3.233c1.177 0 2.226-.408 2.965-1.05-.332-.575-.54-1.338-.54-2.183"/><path d="m22.384 10.261-1.617 1.616 1.617 1.617"/><path d="M7.474 13.7a13 13 0 0 1 2.848-1.337 3 3 0 0 1-.061-.486 3 3 0 0 1 .062-.485 13.5 13.5 0 0 1-2.849-1.337 9.2 9.2 0 0 1-1.707-1.382c-2.492.154-4.396 1.025-4.396 3.205s1.904 3.051 4.396 3.205a9.2 9.2 0 0 1 1.707-1.382"/></svg>
+  <svg data-k="termite" viewBox="0 0 24 24"><path d="M1.454 12C1.454 13.894 2.68 15.428 4.966 15.428"/><path d="M10.758 10.286 14.07 4.286"/><path d="M10.759 10.286C10.017 10.286 9.322 10.528 8.867 10.902"/><path d="M10.759 13.714 14.07 19.715"/><path d="M10.759 13.715C11.521 13.715 12.158 13.485 12.612 13.13"/><path d="M10.759 20.572V13.715"/><path d="M10.759 3.428V10.286"/><path d="M12.5 1 10.759 3.428"/><path d="M12.5 23 10.759 20.572"/><path d="M12.612 10.871C12.158 10.514 11.5 10.286 10.758 10.286"/><path d="M12.612 13.13A3.5 3.5 0 0 1 12.612 10.871"/><path d="M14.07 19.715H17.38"/><path d="M14.07 4.286H17.38"/><path d="M19.862 10.286 22.345 9.429"/><path d="M19.862 13.715 22.345 14.572"/><path d="M22.345 14.572 23 13.5"/><path d="M22.345 9.429 23 10.5"/><path d="M4.966 15.428C6.784 15.428 8.312 14.449 8.866 13.098"/><path d="M4.966 8.572C2.68 8.572 1.454 10.106 1.454 12"/><path d="M8.866 13.098C9.322 13.471 9.996 13.714 10.759 13.714"/><path d="M8.867 10.902C8.312 9.551 6.785 8.572 4.966 8.572"/><path d="M10.758 13.715 6.62 18.857H2.483"/><path d="M15.724 8.572c-1.828 0-3.31 1.534-3.31 3.428s1.482 3.428 3.31 3.428h2.483c.914 0 1.655-.767 1.655-1.714v-3.428c0-.947-.741-1.714-1.655-1.714Z"/><path d="M2.483 5.143H6.62l4.139 5.143"/></svg>
+  <svg data-k="spray" viewBox="-4 0 24 24"><path d="M11.693 3.796q1.588 2.829 3.176 4.041"/><path d="M5.342 7.029C1.836 8.326 1.406 14.345 1.371 19.15v3.233h11.909v-3.233c-.035-4.806-.464-10.825-3.97-12.122"/><path d="m5.361 17.514 3.93-4"/><path d="M7.326 18.343c1.535 0 2.779-1.267 2.779-2.829S8.861 12.686 7.326 12.686s-2.778 1.267-2.778 2.829 1.244 2.829 2.778 2.829"/><path d="M9.311 7.029h-3.97V2.988C5.342 2.096 6.053 1.371 6.93 1.371h7.146v1.616L9.312 3.796z"/></svg>
+  <svg data-k="ring" viewBox="0 0 24 24"><path d="M14.3294 3.30667C16.2431 3.81944 17.9341 4.94935 19.1402 6.52115C20.3463 8.09294 21 10.0188 21 12C21 13.9812 20.3463 15.9071 19.1402 17.4789C17.9341 19.0506 16.2431 20.1806 14.3294 20.6933"/><path d="M9.67063 3.30667C7.75693 3.81944 6.0659 4.94935 4.85982 6.52115C3.65374 8.09295 3 10.0188 3 12C3 13.9812 3.65374 15.9071 4.85982 17.4789C6.0659 19.0507 7.75693 20.1806 9.67063 20.6933"/></svg>
+  <svg data-k="check" viewBox="0 0 24 24"><path d="M5 12C5 12.7911 5.2346 13.5645 5.67412 14.2223C6.11365 14.8801 6.73836 15.3928 7.46927 15.6955C8.20017 15.9983 9.00444 16.0775 9.78036 15.9231C10.5563 15.7688 11.1569 15.5 11.8284 14.8284L20.5 6.15686"/></svg>
+</template>
+
+<script>
+const gm = k => document.getElementById('gm-icons').content.querySelector(`svg[data-k="${k}"]`).outerHTML.replace('<svg', '<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"')
+const tiles = [['mouse','Chuột'],['fly','Côn trùng'],['termite','Mối'],['spray','Khử khuẩn']]
+
+const projects = [
+  { slug:'sway', name:'Sway', years:'2026–now', sum:'Crypto news as cards you swipe and take a side on.', tags:'Phone app · backend · Rust',
+    stage:`<div class="stage sway">
+      <svg class="chart" viewBox="0 0 352 104">
+        <defs>
+          <pattern id="dots" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#3BB9FF" fill-opacity=".9"/></pattern>
+          <linearGradient id="fadeV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#fff" stop-opacity=".4"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+          <linearGradient id="tint" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3BB9FF" stop-opacity=".05"/><stop offset=".58" stop-color="#3BB9FF" stop-opacity=".015"/><stop offset="1" stop-color="#3BB9FF" stop-opacity="0"/></linearGradient>
+          <mask id="dotMask"><rect width="352" height="104" fill="url(#fadeV)"/></mask>
+        </defs>
+        <path class="area" fill="url(#tint)"/><path class="area" fill="url(#dots)" mask="url(#dotMask)"/>
+        <line class="base" x1="0" x2="352" stroke="#EF4444" stroke-width=".75" stroke-dasharray="3,3" stroke-opacity=".35"/>
+        <path class="line" fill="none" stroke="#3BB9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <g class="marker"><circle r="8" fill="#EF4444"/><circle r="2.5" fill="#fff"/></g>
+        <circle class="pulse" r="4"/><circle class="end" r="4" fill="#3BB9FF"/>
+      </svg>
+      <div class="split"><span style="flex:3.30;background:#FFC5C5"></span><span style="flex:3.61;background:#9FC4FF"></span></div>
+      <div class="amounts"><span style="color:#EF4444">$3.30M</span><span style="color:#3B82F6">$3.61M</span></div>
+      <div class="btns"><span class="btn bear">Sway Bearish <i data-lucide="trending-down"></i></span><span class="btn bull">Sway Bullish <i data-lucide="trending-up"></i></span></div>
+    </div>` },
+  { slug:'cerebro', name:'Cerebro', years:'2025–2026', sum:'Shows all your crypto accounts in one place.', tags:'Web · backend · admin · 200K+ users',
+    stage:`<div class="stage cerebro"><div class="card"></div>
+      <svg viewBox="0 0 216 216"></svg>
+      <div class="center"><span class="name">USDC</span><span class="value">$106,198.94</span><span class="pill">79.94%</span></div>
+      <div class="legend">${[['USDC','79.94%','#06B6D4'],['ZEC','4.68%','#10B981'],['LIT','3.69%','#EC4899'],['Key of…','3.39%','#6366F1'],['VVV','2.57%','#FF6B42']]
+        .map(([n,p,c]) => `<div><i style="background:${c}"></i>${n}<b>${p}</b></div>`).join('')}</div>
+    </div>` },
+  { slug:'benkon', name:'BenKon', years:'2023–2025', sum:'Control office devices and book meeting rooms.', tags:'Web · phone · tablet',
+    stage:`<div class="stage benkon">
+      <div class="tabs"><span class="tab"><i data-lucide="bot"></i>Operation settings</span><span class="tab on"><i data-lucide="list-tree"></i>Devices</span><span class="tab"><i data-lucide="settings"></i>Settings</span></div>
+      <div class="cards">${['AC 02','AC 01'].map(n => `<div class="ac"><div class="head"><span class="unit"></span>${n}<i data-lucide="chevron-right"></i></div>
+        <div class="stats"><span><i data-lucide="snowflake"></i>Cool</span><span><i data-lucide="wind"></i>Auto</span><span><i data-lucide="thermometer"></i>24°C</span><span class="w">1.2 kW</span></div>
+        <div class="upd">Last updated just now</div></div>`).join('')}</div>
+    </div>` },
+  { slug:'greenmaster', name:'GreenMaster Go', years:'2025–2026', sum:'Pest-control visits, from report to sign-off.', tags:'Web · phone · Rails · freelance',
+    stage:`<div class="stage greenmaster"><div class="sheet">
+      <div class="title">Loại dịch vụ<span class="close"><i data-lucide="x"></i></span></div>
+      <div class="grid">${tiles.map(([k,l]) => `<div class="tile">${gm(k).replace('<svg','<svg class="ic" stroke-width="1.5"')}<div class="lbl">${l}<span class="ind">${gm('ring').replace('<svg','<svg class="ind" style="color:#A4A7AE" stroke-linecap="butt"')}</span></div></div>`).join('')}</div>
+    </div></div>` },
+]
+
+const list = document.getElementById('list')
+list.innerHTML = projects.map(p => `
+  <a class="row" href="#${p.slug}">
+    <span class="thumb">${p.stage}<span class="logo" style="background-image:url(../../../public/work/${p.slug}/thumb.webp)"></span></span>
+    <span class="text"><span class="top"><span>${p.name}</span><span class="years">${p.years}</span></span>
+      <p class="sum">${p.sum}</p><p class="tags">${p.tags}</p></span>
+  </a>`).join('')
+lucide.createIcons()
+
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+const easeOutCubic = t => 1 - Math.pow(1 - t, 3)
+const easeOut = t => { // CSS 'ease-out' = cubic-bezier(0,0,.58,1), what recharts' animationEasing uses
+  let lo = 0, hi = 1, s = .5
+  for (let i = 0; i < 20; i++) { s = (lo + hi) / 2; const x = 3*(1-s)*s*s*.58 + s*s*s; x < t ? lo = s : hi = s }
+  return 3*(1-s)*s*s + s*s*s
+}
+function tween(dur, delay, fn, ease) {
+  if (reduced) { fn(1); return () => {} }
+  let raf, t0 = performance.now() + delay
+  const tick = now => { const t = Math.min(Math.max((now - t0) / dur, 0), 1); fn(ease(t)); if (t < 1) raf = requestAnimationFrame(tick) }
+  raf = requestAnimationFrame(tick)
+  return () => cancelAnimationFrame(raf)
+}
+const later = (ms, fn) => { if (reduced) { fn(); return () => {} } const id = setTimeout(fn, ms); return () => clearTimeout(id) }
+
+/* Sway: on open the line morphs in from the publish price (the chart's 300ms easeOutCubic morph),
+   the end dot starts its live pulse, then Bullish gets tapped (0.985 / 0.92, 120ms in, 220ms out). */
+const ys = [62, 10, 44, 44, 30, 54, 54, 40, 8, 44, 44, 24, 42, 70, 36, 56], BASE = 42
+function swayFrame(el, k) {
+  const pts = ys.map((y, i) => [i * 352 / (ys.length - 1), 12 + BASE + (y - BASE) * k])
+  let d = `M${pts[0]}`
+  for (let i = 0; i < pts.length - 1; i++) { // Catmull-Rom to Bezier: the chart draws a smooth line
+    const [p0, p1, p2, p3] = [pts[i - 1] || pts[i], pts[i], pts[i + 1], pts[i + 2] || pts[i + 1]]
+    d += ` C${p1[0] + (p2[0] - p0[0]) / 6},${p1[1] + (p2[1] - p0[1]) / 6} ${p2[0] - (p3[0] - p1[0]) / 6},${p2[1] - (p3[1] - p1[1]) / 6} ${p2[0]},${p2[1]}`
+  }
+  el.querySelector('.line').setAttribute('d', d)
+  el.querySelectorAll('.area').forEach(a => a.setAttribute('d', `${d} L352,104 L0,104 Z`))
+  el.querySelector('.base').setAttribute('y1', 12 + BASE); el.querySelector('.base').setAttribute('y2', 12 + BASE)
+  el.querySelector('.marker').setAttribute('transform', `translate(${pts[12][0]},${pts[12][1]})`)
+  const [ex, ey] = pts.at(-1)
+  for (const c of el.querySelectorAll('.end, .pulse')) { c.setAttribute('cx', ex); c.setAttribute('cy', ey) }
+}
+
+/* Cerebro: recharts Pie, inner 80% / outer 90%, paddingAngle 3, starting at 3 o'clock and running
+   counter-clockwise. Mount sweep 300ms ease-out; the selected slice (USDC) thickens inward by 12px
+   over 300ms easeOutCubic at the same time. */
+const slices = [[79.94,'#06B6D4'],[4.68,'#10B981'],[3.69,'#EC4899'],[3.39,'#6366F1'],[2.57,'#FF6B42'],[1.46,'#C964F2'],[4.27,'#75767F']]
+const R = 108, OUT = R * .9, IN = R * .8
+function sector(r0, r1, a0, a1) {
+  const p = (r, a) => `${108 + r * Math.cos(-a * Math.PI / 180)},${108 + r * Math.sin(-a * Math.PI / 180)}`
+  const big = a1 - a0 > 180 ? 1 : 0
+  return `M${p(r1, a0)} A${r1},${r1} 0 ${big} 0 ${p(r1, a1)} L${p(r0, a1)} A${r0},${r0} 0 ${big} 1 ${p(r0, a0)} Z`
+}
+function cerebroFrame(el, sweep, grow) {
+  const total = slices.reduce((s, [v]) => s + v, 0), avail = 360 - 3 * slices.length
+  let a = 0, html = ''
+  for (const [i, [v, c]] of slices.entries()) {
+    const span = avail * v / total
+    const a0 = a * sweep, a1 = (a + span) * sweep
+    html += `<path fill="${c}" d="${sector(i === 0 ? IN - 12 * grow : IN, OUT, a0, Math.max(a1, a0 + .01))}"/>`
+    a += span + 3
+  }
+  el.querySelector('svg').innerHTML = html
+}
+
+const players = {
+  sway(stage) {
+    swayFrame(stage, 0)
+    const bull = stage.querySelector('.bull')
+    return [
+      tween(300, 150, k => swayFrame(stage, k), easeOutCubic),
+      later(900, () => bull.classList.add('pressed')),
+      later(1020, () => bull.classList.remove('pressed')),
+    ]
+  },
+  cerebro(stage) {
+    let s = 0, g = 0
+    cerebroFrame(stage, 0, 0)
+    return [
+      tween(300, 150, k => cerebroFrame(stage, s = k, g), easeOut),
+      tween(300, 150, k => cerebroFrame(stage, s, g = k), easeOutCubic),
+    ]
+  },
+  benkon() { return [] }, // no source to take motion from, so it only gets the site's wipe
+  greenmaster(stage) {
+    const t = stage.querySelector('.tile')
+    return [
+      later(650, () => t.classList.add('pressed')),
+      later(800, () => { // TouchableOpacity press, then the tile flips to selected instantly, as in the app
+        t.classList.remove('pressed'); t.classList.add('on')
+        t.querySelector('.ind').outerHTML = gm('check').replace('<svg', '<svg class="ind" style="color:#008000"')
+      }),
+    ]
+  },
+}
+function resetStage(slug, stage) {
+  if (slug === 'sway') swayFrame(stage, reduced ? 1 : 0)
+  if (slug === 'cerebro') cerebroFrame(stage, reduced ? 1 : 0, reduced ? 1 : 0)
+  if (slug === 'greenmaster') {
+    const t = stage.querySelector('.tile'); t.classList.remove('on', 'pressed')
+    t.querySelector('.ind').outerHTML = gm('ring').replace('<svg', '<svg class="ind" style="color:#A4A7AE" stroke-linecap="butt"')
+  }
+}
+
+const rows = [...list.querySelectorAll('.row')]
+rows.forEach((r, i) => { r.slug = projects[i].slug; r.stage = r.querySelector('.stage'); resetStage(r.slug, r.stage) })
+function activate(row) {
+  for (const r of rows) if (r !== row) deactivate(r)
+  if (row.classList.contains('active')) return
+  row.classList.add('active')
+  row.stop = players[row.slug](row.stage)
+}
+function deactivate(row) {
+  if (!row.classList.contains('active')) return
+  row.classList.remove('active'); row.stop?.forEach(f => f())
+  setTimeout(() => !row.classList.contains('active') && resetStage(row.slug, row.stage), 450) // after the logo has wiped back
+}
+
+if (matchMedia('(hover: hover)').matches) {
+  for (const r of rows) {
+    r.addEventListener('pointerenter', () => activate(r))
+    r.addEventListener('focus', () => activate(r))
+    r.addEventListener('blur', () => deactivate(r))
+  }
+  list.addEventListener('pointerleave', () => rows.forEach(deactivate))
+} else {
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return
+    e.target.classList.add('active'); e.target.stop = players[e.target.slug](e.target.stage); io.unobserve(e.target)
+  }), { threshold: .5 })
+  rows.forEach(r => io.observe(r))
+}
+document.getElementById('zoom').onclick = e => { list.classList.toggle('zoom'); e.target.textContent = list.classList.contains('zoom') ? '1×' : '2×' }
+</script>
+</body>
+</html>

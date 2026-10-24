@@ -14,3 +14,10 @@ Sources (official, public):
 - `gm-main-logo.png`: Green Master logo, from the greenmaster-web repo; the app is public on the App Store
 
 Sway uses its own og-image (`sway/apps/web/public/og-image.png`).
+
+BenKon's thumb is the official logo without its tagline (unreadable at 128px), with the blues
+darkened so the site's dither renders the lettering solid:
+
+    ffmpeg -f lavfi -i color=white:s=3544x1772 -i bk-benkon-official-logo.png -filter_complex \
+      "[0][1]overlay=format=auto,crop=3190:642:177:549,drawbox=x=900:y=505:w=2290:h=137:color=white:t=fill,scale=340:-1,pad=512:320:(ow-iw)/2:(oh-ih)/2:white,curves=all='0/0 0.7/0.22 0.95/0.97 1/1'" \
+      -frames:v 1 -c:v libwebp -quality 90 ../../public/work/benkon/thumb.webp

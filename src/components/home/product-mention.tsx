@@ -1,20 +1,64 @@
 import { PreviewCard } from '@base-ui/react/preview-card'
 import { Link } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AppIcon } from '@/components/app-icon'
+import { hasWorkDetail, WorkDetail } from '@/components/home/work-detail'
 import { Arrow } from '@/components/layout'
 import { DitherImage } from '@/components/shaders/dither-image'
 import { getProject, type Project, type ProjectPreview } from '@/data/projects'
 import { external } from '@/lib/external'
+import { useReducedMotion } from '@/lib/use-media-query'
 
 const nameLink =
   'text-fg underline decoration-fg/0 decoration-1 underline-offset-[3px] transition-[text-decoration-color] duration-150 hover:decoration-fg/40 data-popup-open:decoration-fg/40'
 
-function Card({ preview }: { preview: ProjectPreview }) {
+/**
+ * While the card is open, the card's colour image opens onto the app detail on a loop, with the
+ * Selected work reveal: from the centre, the detail plays, holds, and closes back.
+ */
+function LoopingDetail({ project, image }: { project: Project; image: string }) {
+  const reduced = useReducedMotion()
+  const [on, setOn] = useState(false)
+  const centre = useRef(null)
+  useEffect(() => {
+    if (reduced) {
+      setOn(true)
+      return
+    }
+    let shown = false
+    let id = 0
+    const step = () => {
+      shown = !shown
+      setOn(shown)
+      id = window.setTimeout(step, shown ? 2600 : 1600)
+    }
+    id = window.setTimeout(step, 400)
+    return () => clearTimeout(id)
+  }, [reduced])
+  return (
+    // 16:10, the detail's own shape, so nothing is cropped.
+    <div className="relative h-[188px] w-full overflow-hidden">
+      <WorkDetail slug={project.slug} on={on} className="scale-[calc(300/384)]" />
+      <DitherImage
+        src={image}
+        alt=""
+        revealed={on}
+        clear
+        plain
+        pointer={centre}
+        className="absolute inset-0"
+      />
+    </div>
+  )
+}
+
+function Card({ project, preview }: { project: Project; preview: ProjectPreview }) {
   const { image } = preview
   return (
     <>
-      {image.dither ? (
+      {hasWorkDetail(project.slug) ? (
+        <LoopingDetail project={project} image={image.src} />
+      ) : image.dither ? (
         <DitherImage {...image} alt="" revealed={false} className="h-[139px] w-full" />
       ) : (
         <img
@@ -111,7 +155,7 @@ export function ProductMention({ slug }: { slug: string }) {
       <PreviewCard.Portal>
         <PreviewCard.Positioner side="bottom" align="start" sideOffset={10} collisionPadding={16}>
           <PreviewCard.Popup className="w-[300px] origin-(--transform-origin) overflow-hidden rounded-[14px] border border-edge bg-card shadow-[0_18px_48px_var(--color-card-shadow)] transition-[opacity,scale,filter] duration-150 ease-(--ease-out) data-ending-style:scale-[0.97] data-ending-style:opacity-0 data-starting-style:scale-[0.97] data-starting-style:opacity-0 data-starting-style:blur-[2px]">
-            <Card preview={project.preview} />
+            <Card project={project} preview={project.preview} />
           </PreviewCard.Popup>
         </PreviewCard.Positioner>
       </PreviewCard.Portal>

@@ -1,5 +1,5 @@
 import { type PaperShaderElement, ShaderMount } from '@paper-design/shaders-react'
-import { useEffect, useMemo, useRef } from 'react'
+import { type RefObject, useEffect, useMemo, useRef } from 'react'
 import type { DitherTone } from '@/data/projects'
 import { useTheme } from '@/lib/theme'
 import { useReducedMotion } from '@/lib/use-media-query'
@@ -15,14 +15,26 @@ type Props = DitherTone & {
   alt: string
   /** Wipe from dither to full colour. */
   revealed: boolean
+  /** Wipe to transparent instead, uncovering what is behind the image. */
+  clear?: boolean
+  /** Show the image in colour, not dithered; only the wipe edge is dithered. Use with `clear`. */
+  plain?: boolean
+  /**
+   * The pointer, in client coordinates. When given, the reveal opens as a circle from where the
+   * pointer is (or the centre, without one) and closes back to the same point.
+   */
+  pointer?: RefObject<{ x: number; y: number } | null>
   className?: string
 }
 
-/** An image shown as a 4-tone dither that resolves into colour when `revealed`. */
+/** An image shown as a 4-tone dither (or in colour) that resolves into colour or clears when `revealed`. */
 export function DitherImage({
   src,
   alt,
   revealed,
+  clear,
+  plain,
+  pointer,
   invert,
   contrast = 1.1,
   gamma = 0.6,
@@ -40,6 +52,11 @@ export function DitherImage({
       u_image: src,
       // Must be present at mount for the uniform to be registered; tweened below, not via props.
       u_reveal: 0,
+      u_clear: clear ? 1 : 0,
+      u_plain: plain ? 1 : 0,
+      u_radial: pointer ? 1 : 0,
+      u_from: [0.5, 0.5],
+      u_maxd: 1,
       u_cell: 1,
       u_levels: 4,
       u_contrast: contrast,
@@ -48,15 +65,31 @@ export function DitherImage({
       u_shadow: light ? [0.227, 0.29, 0.345] : [0.082, 0.082, 0.082],
       u_light: light ? [0.925, 0.922, 0.91] : [0.663, 0.737, 0.796],
     }),
-    [src, contrast, gamma, invert, light],
+    [src, clear, plain, pointer, contrast, gamma, invert, light],
   )
 
   // u_reveal is tweened on the mount directly so React never re-renders mid-animation.
   useEffect(() => {
     const target = revealed ? 1 : 0
+    const mount = ref.current?.paperShaderMount
     const set = (v: number) => {
       progress.current = v
-      ref.current?.paperShaderMount?.setUniforms({ u_reveal: v })
+      mount?.setUniforms({ u_reveal: v })
+    }
+    // Open from the pointer; closing keeps the same centre, so it shrinks back to where it began.
+    const el = ref.current
+    if (revealed && pointer && el) {
+      const r = el.getBoundingClientRect()
+      const p = pointer.current
+      // Clamped near the image, so a pointer far along the row still opens from that side.
+      const clamp = (v: number) => Math.min(Math.max(v, -0.25), 1.25)
+      const fx = p ? clamp((p.x - r.left) / r.width) : 0.5
+      const fy = p ? clamp(1 - (p.y - r.top) / r.height) : 0.5
+      const aspect = r.width / r.height
+      const maxd = Math.max(
+        ...[0, 1].flatMap((x) => [0, 1].map((y) => Math.hypot((x - fx) * aspect, y - fy))),
+      )
+      mount?.setUniforms({ u_from: [fx, fy], u_maxd: maxd })
     }
     if (reduced) return set(target)
     const from = progress.current
@@ -69,7 +102,7 @@ export function DitherImage({
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [revealed, reduced])
+  }, [revealed, reduced, pointer])
 
   return (
     <ShaderMount

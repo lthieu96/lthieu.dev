@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowUpRight } from 'lucide-react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { hasWorkDetail, WorkDetail } from '@/components/home/work-detail'
 import { DitherImage } from '@/components/shaders/dither-image'
 import type { Project } from '@/data/projects'
 
@@ -44,7 +45,31 @@ export function ProjectList({ projects }: { projects: Project[] }) {
 }
 
 /**
- * The thumbnail is dithered until the row is active, then it wipes to full colour.
+ * Whether a thumbnail shows its detail: while the row is active, or, on touch screens where
+ * nothing hovers, from the first time it is half in view.
+ */
+function useShown(active: boolean) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const [seen, setSeen] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || window.matchMedia('(hover: hover)').matches) return
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return
+        setSeen(true)
+        io.disconnect()
+      },
+      { threshold: 0.5 },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  return { ref, on: active || seen }
+}
+
+/**
+ * The thumbnail is a dithered logo until the row is active, then it wipes off to the app detail.
  * Rows with a case study link to it and show an arrow.
  */
 function ProjectRow({
@@ -59,14 +84,31 @@ function ProjectRow({
   onBlur: () => void
 }) {
   const { thumb, caseStudy } = project
+  const detail = hasWorkDetail(project.slug)
+  const shown = useShown(active)
+  // Where the pointer is, so the thumbnail opens from the side the hand came in.
+  const pointer = useRef<{ x: number; y: number } | null>(null)
+  const track = (e: React.PointerEvent) => {
+    pointer.current = { x: e.clientX, y: e.clientY }
+  }
 
   const body: ReactNode = (
     <>
-      <DitherImage
-        {...thumb}
-        revealed={active}
-        className="h-20 w-32 shrink-0 overflow-hidden rounded-lg outline outline-1 outline-edge -outline-offset-1 max-sm:h-16 max-sm:w-24"
-      />
+      <span
+        ref={shown.ref}
+        className="relative h-20 w-32 shrink-0 overflow-hidden rounded-lg outline outline-1 outline-edge -outline-offset-1 max-sm:h-16 max-sm:w-24"
+      >
+        {detail && <WorkDetail slug={project.slug} on={shown.on} />}
+        {/* With a detail underneath, the dithered logo wipes off to it in the shader, with the
+            same dithered edge as the colour reveal; without one, the logo wipes to colour. */}
+        <DitherImage
+          {...thumb}
+          revealed={detail ? shown.on : active}
+          clear={detail}
+          pointer={detail ? pointer : undefined}
+          className="absolute inset-0"
+        />
+      </span>
       <div className="min-w-0 flex-1">
         {/* The year shares the title's baseline. */}
         <div className="flex items-baseline justify-between gap-4">
@@ -90,11 +132,18 @@ function ProjectRow({
   )
 
   // Background, arrow and thumbnail all follow `active`, so they always change together.
+  // The background is its own layer that only fades: changing background-color repaints the page
+  // layer, and next to the WebGL thumbs Chrome would sometimes show a stale frame of it.
   const props = {
     className:
-      'group flex items-center gap-[18px] rounded-xl px-2.5 py-3 transition-colors duration-150 data-active:bg-well max-sm:gap-3.5',
+      'group relative isolate flex items-center gap-[18px] rounded-xl px-2.5 py-3 before:absolute before:inset-0 before:-z-10 before:rounded-xl before:bg-well before:opacity-0 before:transition-opacity before:duration-150 before:will-change-[opacity] data-active:before:opacity-100 max-sm:gap-3.5',
     'data-active': active ? '' : undefined,
+    onPointerMove: track,
     ...handlers,
+    onPointerEnter: (e: React.PointerEvent) => {
+      track(e)
+      handlers.onPointerEnter()
+    },
   }
 
   return caseStudy ? (

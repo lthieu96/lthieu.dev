@@ -1,6 +1,7 @@
 #version 300 es
 // Ported from design/image-dither.glsl. The image is dithered into a few tones of a duotone,
-// and u_reveal (0..1) wipes to full colour with a dithered edge.
+// and u_reveal (0..1) wipes to full colour with a dithered edge, or with u_clear to transparent,
+// uncovering whatever sits underneath. With u_radial the wipe opens as a circle from u_from.
 // mediump to match the library vertex shader; it upgrades both to highp where mediump is weak.
 precision mediump float;
 
@@ -11,6 +12,11 @@ uniform sampler2D u_image;
 uniform float u_imageAspectRatio; // set by ShaderMount when u_image loads
 uniform float u_cell;
 uniform float u_reveal;
+uniform float u_clear;
+uniform float u_plain; // show the image itself, not the dither, until it clears
+uniform float u_radial;
+uniform vec2 u_from; // circle centre in uv, y up; may lie outside the image
+uniform float u_maxd; // distance from u_from to the farthest corner, in uv-height units
 uniform float u_contrast;
 uniform float u_invert;
 uniform float u_levels;
@@ -50,7 +56,11 @@ void main() {
 
   // The wipe edge is a dithered band (30% of the width), so the reveal reads as pixels resolving
   // rather than a hard line. Offsets keep reveal=0 fully dithered and reveal=1 fully in colour.
-  float edge = uv.x - u_reveal * 1.32 + 0.16;
-  float showColour = step(edge + (th - 0.5) * 0.3, 0.0);
-  fragColor = mix(dithered, src, showColour);
+  float edge = uv.x - u_reveal * 1.32 + 0.16 + (th - 0.5) * 0.3;
+  if (u_radial > 0.5) {
+    float d = length((uv - u_from) * vec2(u_resolution.x / u_resolution.y, 1.0)) / u_maxd;
+    edge = d - u_reveal * 1.25 + 0.12 + (th - 0.5) * 0.25;
+  }
+  float showColour = step(edge, 0.0);
+  fragColor = mix(mix(dithered, src, u_plain), src * (1.0 - u_clear), showColour);
 }

@@ -59,7 +59,7 @@ export type Project = {
   name: string
   /** Square app-icon tile, full-bleed (corners are rounded in CSS). 128px webp. */
   icon?: string
-  /** One plain sentence: what it is, not how it's built. */
+  /** One plain sentence on what I built. What the product is goes in `preview`. */
   summary: string
   tags: string[]
   years: string
@@ -73,7 +73,7 @@ export const projects: Project[] = [
     slug: 'sway',
     name: 'Sway',
     icon: '/work/sway/icon.webp',
-    summary: 'Crypto news as cards you swipe and take a side on.',
+    summary: 'Trading backend on Hyperliquid: rate-limit gateway, settlement, rewards.',
     tags: ['Phone app', 'backend', 'Rust'],
     years: '2026–now',
     thumb: {
@@ -81,6 +81,8 @@ export const projects: Project[] = [
       alt: 'Sway artwork: the market for narratives',
       invert: true,
       gamma: 0.6,
+      // Logo cards: push mid-tones to ink or paper so the lettering stays solid, not checkered.
+      contrast: 2.4,
     },
     preview: {
       title: 'Sway: the market for narratives',
@@ -179,7 +181,7 @@ export const projects: Project[] = [
     slug: 'cerebro',
     name: 'Cerebro',
     icon: '/work/cerebro/icon.webp',
-    summary: 'Shows all your crypto accounts in one place.',
+    summary: 'Synced 8 exchanges plus EVM and Solana wallets into one portfolio.',
     tags: ['Web', 'backend', 'admin', '200K+ users'],
     years: '2025–2026',
     thumb: {
@@ -257,7 +259,7 @@ export const projects: Project[] = [
     slug: 'benkon',
     name: 'BenKon',
     icon: '/work/benkon/icon.webp',
-    summary: 'Control office devices and book meeting rooms.',
+    summary: 'Admin, phone and tablet apps. Cut admin page loads by 30%.',
     tags: ['Web', 'phone', 'tablet'],
     years: '2023–2025',
     thumb: {
@@ -265,6 +267,8 @@ export const projects: Project[] = [
       alt: 'BenKon logo: energy efficiency solutions',
       invert: true,
       gamma: 0.6,
+      // Logo cards: push mid-tones to ink or paper so the lettering stays solid, not checkered.
+      contrast: 2.4,
     },
     preview: {
       title: 'BenKon: office devices and meeting rooms',
@@ -277,7 +281,7 @@ export const projects: Project[] = [
     slug: 'greenmaster',
     name: 'GreenMaster Go',
     icon: '/work/greenmaster/icon.webp',
-    summary: 'Pest-control visits, from report to sign-off.',
+    summary: 'Web admin, Expo phone app and Rails backend for pest-control visits.',
     tags: ['Web', 'phone', 'Rails', 'freelance'],
     years: '2025–2026',
     thumb: {
@@ -285,6 +289,8 @@ export const projects: Project[] = [
       alt: 'Green Master logo: integrated pest management',
       invert: true,
       gamma: 0.6,
+      // Logo cards: push mid-tones to ink or paper so the lettering stays solid, not checkered.
+      contrast: 2.4,
     },
     preview: {
       title: 'GreenMaster Go: pest-control visits',

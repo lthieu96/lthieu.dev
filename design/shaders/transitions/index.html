@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thumb transitions · logo to detail</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#fcfcfb; --fg:#1a1a1a; --muted:#6f6f6f; --edge:rgb(0 0 0/.08); --well:#f3f3f1 }
+  * { box-sizing:border-box; margin:0 }
+  body { background:var(--bg); color:var(--fg); font:14px/1.45 Geist, system-ui, sans-serif; padding:40px 20px }
+  main { max-width:900px; margin:0 auto }
+  .bar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom:24px; color:var(--muted); font-size:13px }
+  .bar button { font:inherit; color:var(--fg); background:var(--well); border:1px solid var(--edge); border-radius:6px; padding:3px 10px; cursor:pointer }
+  .bar input { width:180px }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:28px 24px }
+  .card { padding:12px; border-radius:12px; transition:background .15s }
+  .card:hover { background:var(--well) }
+  .card h3 { font-size:14px; font-weight:500 }
+  .card p { color:var(--muted); font-size:12.5px; margin:2px 0 10px; min-height:36px }
+  .tiles { display:flex; gap:10px; flex-wrap:wrap }
+  .tile { position:relative; border-radius:8px; overflow:hidden; outline:1px solid var(--edge); outline-offset:-1px }
+  .tile img, .tile canvas { position:absolute; inset:0; width:100%; height:100% }
+</style>
+</head>
+<body>
+<main>
+  <div class="bar">
+    <span>Hover a card to play (300ms ease-in-out, like the site). Leave to play it back.</span>
+    <button id="size">Real size (1×)</button>
+    <button id="all">Play all</button>
+    <label>Scrub <input id="scrub" type="range" min="0" max="1" step="0.01" value="0"></label>
+  </div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<script>
+const MODES = [
+  ['Wipe (current)', 'Left to right, with a dithered edge band 30% wide.'],
+  ['Dither dissolve', 'Every cell drops out by its Bayer threshold: the logo thins out evenly, like a fade done in pixels.'],
+  ['Dissolve sweep', 'Dissolve with a drift: a wide, soft band moves left to right. Between the wipe and the dissolve.'],
+  ['Pixel bloom', 'The cells grow from 1px to 6px while they drop out, so the logo breaks into larger pixels.'],
+  ['Radial from cursor', 'Opens from where the pointer came in, with a dithered rim.'],
+  ['Vertical, follows the hand', 'From the top when moving down the list, from the bottom when moving up (here: from where you enter).'],
+]
+const THUMBS = [
+  { slug:'sway', invert:0, contrast:2.4, gamma:0.6 },
+  { slug:'cerebro', invert:1, contrast:1.1, gamma:0.6 },   // light theme flips `invert`, as in DitherImage
+]
+
+const FRAG = `#version 300 es
+precision mediump float;
+uniform vec2 u_res; uniform float u_cellPx; uniform sampler2D u_img; uniform float u_imgAspect;
+uniform float u_reveal; uniform int u_mode; uniform float u_contrast, u_gamma, u_invert;
+uniform vec3 u_shadow, u_light; uniform vec2 u_from; uniform float u_maxd; uniform float u_dir;
+out vec4 o;
+float bayer2(vec2 a){ a=floor(a); return fract(dot(a, vec2(.5, a.y*.75))); }
+float bayer4(vec2 a){ return bayer2(.5*a)*.25 + bayer2(a); }
+float bayer8(vec2 a){ return bayer4(.5*a)*.25 + bayer2(a); }
+vec2 cover(vec2 uv){ float box=u_res.x/u_res.y; vec2 s = box>u_imgAspect ? vec2(1., u_imgAspect/box) : vec2(box/u_imgAspect, 1.); vec2 c=(uv-.5)*s+.5; return vec2(c.x, 1.-c.y); }
+void main(){
+  vec2 uv = gl_FragCoord.xy / u_res;
+  float r = u_reveal;
+  float c = u_mode == 3 ? u_cellPx * floor(mix(1., 6.99, r)) : u_cellPx;
+  vec2 cell = floor(gl_FragCoord.xy / c);
+  float th = bayer8(cell);
+  float show = 0.;
+  if (u_mode == 0) show = step(uv.x - r*1.32 + .16 + (th-.5)*.3, 0.);
+  else if (u_mode == 1 || u_mode == 3) show = step(th + .001, r);
+  else if (u_mode == 2) show = step(uv.x*.6 + th*.4 + .001, r);
+  else if (u_mode == 4) { vec2 d = (uv - u_from) * vec2(u_res.x/u_res.y, 1.); show = step(length(d)/u_maxd + (th-.5)*.25, r*1.25 - .12); }
+  else if (u_mode == 5) { float y = u_dir > 0. ? 1. - uv.y : uv.y; show = step(y - r*1.32 + .16 + (th-.5)*.3, 0.); }
+  vec4 s = texture(u_img, cover((cell + .5) * c / u_res));
+  float l = dot(s.rgb / max(s.a, .001), vec3(.299, .587, .114));
+  l = mix(l, 1. - l, u_invert);
+  l = pow(clamp((l - .5) * u_contrast + .5, 0., 1.), u_gamma);
+  float q = clamp(floor(l * 3. + th), 0., 3.) / 3.;
+  o = vec4(mix(u_shadow, u_light, q) * s.a, s.a) * (1. - show);
+}`
+const VERT = `#version 300 es
+in vec2 p; void main(){ gl_Position = vec4(p, 0., 1.); }`
+
+let scale = 2
+const tiles = []
+const grid = document.getElementById('grid')
+MODES.forEach(([name, desc], mode) => {
+  const card = document.createElement('div'); card.className = 'card'
+  card.innerHTML = `<h3>${mode + 1}. ${name}</h3><p>${desc}</p><div class="tiles"></div>`
+  grid.append(card)
+  const group = THUMBS.map(t => makeTile(card.querySelector('.tiles'), t, mode))
+  let anim
+  const play = (to, e) => {
+    for (const tile of group) {
+      if (e) { // where the pointer came in, in the tile's GL space (y up)
+        const b = tile.canvas.getBoundingClientRect()
+        tile.from = [Math.min(Math.max((e.clientX - b.left) / b.width, 0), 1), 1 - Math.min(Math.max((e.clientY - b.top) / b.height, 0), 1)]
+        tile.dir = tile.from[1] > .5 ? 1 : -1
+      }
+    }
+    cancelAnimationFrame(anim)
+    const from = group[0].reveal, t0 = performance.now()
+    const tick = now => {
+      const t = Math.min((now - t0) / 300, 1), k = t < .5 ? 2*t*t : 1 - (-2*t + 2) ** 2 / 2
+      for (const tile of group) { tile.reveal = from + (to - from) * k; draw(tile) }
+      if (t < 1) anim = requestAnimationFrame(tick)
+    }
+    anim = requestAnimationFrame(tick)
+  }
+  card.addEventListener('pointerenter', e => play(1, e))
+  card.addEventListener('pointerleave', e => play(0, e))
+  card.play = play
+})
+
+function makeTile(parent, t, mode) {
+  const el = document.createElement('div'); el.className = 'tile'
+  el.innerHTML = `<img src="${t.slug}-detail.png" alt=""><canvas></canvas>`
+  parent.append(el)
+  const canvas = el.querySelector('canvas')
+  const gl = canvas.getContext('webgl2', { premultipliedAlpha: true })
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s); return s }
+  const prog = gl.createProgram()
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG)); gl.linkProgram(prog); gl.useProgram(prog)
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW)
+  const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0)
+  const tile = { el, canvas, gl, prog, mode, t, reveal: 0, from: [0, .5], dir: 1, aspect: 1.6, ready: false }
+  const img = new Image()
+  img.onload = () => {
+    gl.bindTexture(gl.TEXTURE_2D, gl.createTexture())
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
+    tile.aspect = img.width / img.height; tile.ready = true; draw(tile)
+  }
+  img.src = `../../../public/work/${t.slug}/thumb.webp`
+  tiles.push(tile); size(tile)
+  return tile
+}
+
+function size(tile) {
+  const w = 128 * scale, h = 80 * scale, dpr = devicePixelRatio
+  tile.el.style.width = w + 'px'; tile.el.style.height = h + 'px'
+  tile.canvas.width = w * dpr; tile.canvas.height = h * dpr
+  draw(tile)
+}
+function draw(tile) {
+  if (!tile.ready) return
+  const { gl, prog, t, canvas } = tile, u = n => gl.getUniformLocation(prog, n)
+  gl.viewport(0, 0, canvas.width, canvas.height)
+  gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT)
+  gl.uniform2f(u('u_res'), canvas.width, canvas.height)
+  gl.uniform1f(u('u_cellPx'), scale * devicePixelRatio) // 1 CSS px at real size, scaled with the preview
+  gl.uniform1f(u('u_imgAspect'), tile.aspect)
+  gl.uniform1f(u('u_reveal'), tile.reveal)
+  gl.uniform1i(u('u_mode'), tile.mode)
+  gl.uniform1f(u('u_contrast'), t.contrast); gl.uniform1f(u('u_gamma'), t.gamma); gl.uniform1f(u('u_invert'), t.invert)
+  gl.uniform3f(u('u_shadow'), .227, .29, .345); gl.uniform3f(u('u_light'), .925, .922, .91)
+  gl.uniform2f(u('u_from'), ...tile.from); gl.uniform1f(u('u_dir'), tile.dir)
+  const a = canvas.width / canvas.height, [fx, fy] = tile.from
+  gl.uniform1f(u('u_maxd'), Math.max(...[[0,0],[1,0],[0,1],[1,1]].map(([x, y]) => Math.hypot((x - fx) * a, y - fy))))
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+}
+
+document.getElementById('size').onclick = e => {
+  scale = scale === 2 ? 1 : 2
+  e.target.textContent = scale === 2 ? 'Real size (1×)' : 'Zoom (2×)'
+  tiles.forEach(size)
+}
+document.getElementById('scrub').oninput = e => tiles.forEach(t => { t.reveal = +e.target.value; draw(t) })
+document.getElementById('all').onclick = () => {
+  const cards = [...grid.children]
+  cards.forEach(c => c.play(1))
+  setTimeout(() => cards.forEach(c => c.play(0)), 1200)
+}
+</script>
+</body>
+</html>

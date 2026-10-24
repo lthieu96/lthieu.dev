@@ -198,6 +198,18 @@
   }
 }
 
+/* Sway's live end-dot pulse, in the Selected work thumbnail (see work-detail.tsx). */
+@keyframes sway-pulse {
+  from {
+    scale: 1;
+    opacity: 0.5;
+  }
+  to {
+    scale: 3.5;
+    opacity: 0;
+  }
+}
+
 @utility enter {
   animation: enter 560ms var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * 90ms);
