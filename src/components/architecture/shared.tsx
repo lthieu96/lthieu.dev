@@ -95,6 +95,22 @@ export function useFigureClock(
   return { reduce, clock, renderRef, playing, setPlaying }
 }
 
+/**
+ * Calls `measure` whenever any of `els` changes size, and once more when web fonts finish
+ * loading. Watching only the figure isn't enough: a late font can resize one card, moving it
+ * inside its row, while the figure keeps its size and the links would point at the old spot.
+ */
+export function watchLayout(els: Iterable<Element | null | undefined>, measure: () => void) {
+  const ro = new ResizeObserver(measure)
+  for (const el of els) if (el) ro.observe(el)
+  let live = true
+  document.fonts?.ready.then(() => live && measure())
+  return () => {
+    live = false
+    ro.disconnect()
+  }
+}
+
 /** Filled accent: built by me. Hollow: the team. */
 export function Dot({ mine }: { mine?: boolean }) {
   return (

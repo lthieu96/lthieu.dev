@@ -11,6 +11,7 @@ import {
   Track,
   useFigureClock,
   useSelection,
+  watchLayout,
 } from './shared'
 
 // Variant A (field map) from design/portfolio.pen, research in design/architecture/research-greenmaster.md.
@@ -287,10 +288,11 @@ export function GreenMasterArchitecture() {
       const p = paperRef.current?.getBoundingClientRect()
       setBoxes({ paper: p ? p.right - S.left : 0, at })
     }
-    const ro = new ResizeObserver(measure)
-    ro.observe(stage)
-    ro.observe(frame)
-    return () => ro.disconnect()
+    // Caveat, the handwriting, often lands after first paint and reflows the paper.
+    return watchLayout(
+      [stage, frame, ...stage.children, ...stage.querySelectorAll('[data-anchor]')],
+      measure,
+    )
   }, [])
 
   // Chapter = which slice of the loop we're in; the bars show progress through each.

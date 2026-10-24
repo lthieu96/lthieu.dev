@@ -15,6 +15,7 @@ import {
   textIn,
   useFigureClock,
   useSelection,
+  watchLayout,
   wave,
 } from './shared'
 
@@ -130,7 +131,9 @@ function bend(x1: number, y1: number, x2: number, y2: number, downFirst: boolean
 /** Up from one top, across above everything at `top`, and down into another top. */
 function over(x1: number, y1: number, x2: number, y2: number, top: number) {
   const s = Math.sign(x2 - x1) || 1
-  const r = 24
+  // The corner can't be taller than the room above either end, or the line would first run
+  // down into the card it leaves, then turn back up.
+  const r = Math.min(24, y1 - top, y2 - top, Math.abs(x2 - x1) / 2)
   return `M${x1} ${y1} V${top + r} C${x1} ${top} ${x1} ${top} ${x1 + s * r} ${top} H${x2 - s * r} C${x2} ${top} ${x2} ${top} ${x2} ${top + r} V${y2}`
 }
 
@@ -143,7 +146,9 @@ function route(n: Record<NodeId, Box>, narrow: boolean, width: number): Routes {
   if (narrow) {
     const y = overlap(gw, hl)
     const my = overlap(fill, api)
-    const rx = width + 10 // the price line runs down the right edge, outside the cards
+    // The price line runs down the right edge, in the frame's padding, clear of the cards.
+    const rx = width + 12
+    const r = 10
     const top = phone.t - 16
     return {
       d: {
@@ -156,7 +161,7 @@ function route(n: Record<NodeId, Box>, narrow: boolean, width: number): Routes {
         match: `M${fill.l} ${my} H${api.r}`,
         fees: `M${api.l} ${api.cy} C${api.l - 16} ${api.cy} ${rew.l - 16} ${rew.cy} ${rew.l} ${rew.cy}`,
         ticks: `M${hl.cx} ${hl.b} V${price.t}`,
-        prices: `M${price.r} ${price.cy} H${rx - 16} C${rx} ${price.cy} ${rx} ${price.cy} ${rx} ${price.cy - 16} V${top + 16} C${rx} ${top} ${rx} ${top} ${rx - 16} ${top} H${phone.cx + 16} C${phone.cx} ${top} ${phone.cx} ${top} ${phone.cx} ${top + 16} V${phone.t}`,
+        prices: `M${price.r} ${price.cy} H${rx - r} C${rx} ${price.cy} ${rx} ${price.cy} ${rx} ${price.cy - r} V${top + r} C${rx} ${top} ${rx} ${top} ${rx - r} ${top} H${phone.cx + r} C${phone.cx} ${top} ${phone.cx} ${top} ${phone.cx} ${top + r} V${phone.t}`,
       },
       labels: [],
     }
@@ -398,10 +403,7 @@ export function SwayArchitecture() {
       }
       setRoutes(route(boxes, isNarrow, S.width))
     }
-    const ro = new ResizeObserver(measure)
-    ro.observe(stage)
-    ro.observe(frame)
-    return () => ro.disconnect()
+    return watchLayout([stage, frame, ...Object.values(nodeRefs.current)], measure)
   }, [])
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: new routes move the paths, so lengths are re-measured

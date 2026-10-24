@@ -15,6 +15,7 @@ import {
   textIn,
   useFigureClock,
   useSelection,
+  watchLayout,
   wave,
 } from './shared'
 
@@ -297,10 +298,7 @@ export function CerebroArchitecture() {
       }
       setD(next)
     }
-    const ro = new ResizeObserver(layout)
-    ro.observe(grid)
-    ro.observe(frame)
-    return () => ro.disconnect()
+    return watchLayout([grid, frame, ...Object.values(nodeRefs.current)], layout)
   }, [])
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: `d` moves the paths, so lengths are re-measured
