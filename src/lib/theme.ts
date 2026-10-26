@@ -30,7 +30,8 @@ export function setTheme(theme: Theme) {
   const apply = () => {
     root().dataset.theme = theme
   }
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const reduced =
+    matchMedia('(prefers-reduced-motion: reduce)').matches && !root().hasAttribute('data-motion')
   if (!document.startViewTransition || reduced) apply()
   else document.startViewTransition(apply)
 }

@@ -1,9 +1,11 @@
 import { Popover } from '@base-ui/react/popover'
-import NumberFlow, { NumberFlowGroup } from '@number-flow/react'
+import { Pause, Play } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import NumberFlow, { NumberFlowGroup } from '@/components/number-flow'
 import { type Credit, lookedAt, madeWith, reading } from '@/data/credits'
 import { site } from '@/data/site'
 import { external } from '@/lib/external'
+import { forceMotion, useMediaQuery, useMotionForced } from '@/lib/use-media-query'
 import { Arrow, delay } from './layout'
 import { AnimatedSignature } from './signature'
 
@@ -113,6 +115,30 @@ function BuildCredits() {
   )
 }
 
+/**
+ * Shown only when the system asks for reduced motion: turns the site's animation back on until a
+ * reload, for visitors who'd like to see the demos and shaders anyway.
+ */
+function MotionSwitch() {
+  const reduce = useMediaQuery('(prefers-reduced-motion: reduce)')
+  const forced = useMotionForced()
+  if (!reduce) return null
+  return (
+    <p>
+      <button
+        type="button"
+        aria-pressed={forced}
+        onClick={() => forceMotion(!forced)}
+        // Accent, with an icon: the one footer line that changes how the site behaves.
+        className="inline-flex cursor-pointer items-center gap-1.5 text-accent decoration-accent/50 underline-offset-[3px] hover:underline"
+      >
+        {forced ? <Pause size={11} aria-hidden /> : <Play size={11} aria-hidden />}
+        {forced ? 'Reduce motion on this page' : 'Enable animation on this page'}
+      </button>
+    </p>
+  )
+}
+
 export function Footer({ i }: { i: number }) {
   return (
     <footer
@@ -132,6 +158,7 @@ export function Footer({ i }: { i: number }) {
         <p>
           <BuildCredits />
         </p>
+        <MotionSwitch />
       </div>
       <AnimatedSignature />
     </footer>

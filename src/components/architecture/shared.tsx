@@ -1,4 +1,3 @@
-import NumberFlow from '@number-flow/react'
 import { Pause, Play } from 'lucide-react'
 import {
   type FocusEvent,
@@ -10,6 +9,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import NumberFlow from '@/components/number-flow'
 import { useReducedMotion } from '@/lib/use-media-query'
 
 // The pieces the architecture figures share, so they read as one system: the clock, the frame,

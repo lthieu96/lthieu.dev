@@ -1,5 +1,5 @@
-import NumberFlow from '@number-flow/react'
 import { type CSSProperties, useEffect, useRef, useState } from 'react'
+import NumberFlow from '@/components/number-flow'
 import {
   ArchFigure,
   clamp,

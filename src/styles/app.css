@@ -14,6 +14,15 @@
 /* Screens narrower than the A4 resume sheet. Screen only, so printing keeps the A4 layout. */
 @custom-variant narrow-screen (@media screen and (max-width: 860px));
 
+/* Reduce Motion, unless the footer switch (data-motion on <html>) turned animation back on. */
+@custom-variant motion-reduce {
+  @media (prefers-reduced-motion: reduce) {
+    &:where(:root:not([data-motion]) *) {
+      @slot;
+    }
+  }
+}
+
 /* Design tokens, mirrored from the variables in design/portfolio.pen. Dark is the default;
    light overrides the same names below. Shaders read these at runtime too. */
 @theme {
@@ -259,14 +268,16 @@
   animation-timing-function: var(--ease-out);
 }
 
+/* data-motion: the footer switch that turns animation back on for this visit. It leaves .enter
+   alone: turned on after load, every block would vanish and rise again, the switch included. */
 @media (prefers-reduced-motion: reduce) {
   .enter {
     animation: none;
   }
 
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) {
+  :root:not([data-motion])::view-transition-group(*),
+  :root:not([data-motion])::view-transition-old(*),
+  :root:not([data-motion])::view-transition-new(*) {
     animation: none;
   }
 }
