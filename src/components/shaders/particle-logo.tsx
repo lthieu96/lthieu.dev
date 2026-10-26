@@ -34,7 +34,7 @@ type Props = {
 const MAX = 16000 // particles; bigger logos are subsampled evenly
 const LAYERS = 6
 const THICK = 0.22 // slab depth, in a tile 2 units wide
-const SCALE = 0.78 // leaves room for the tilt and the shadow
+const SCALE = 0.78 // leaves room for the tilt
 const K = 90 // spring stiffness
 const C = 14 // damping (ratio ~0.74: a little overshoot)
 const F = 160 // pointer repel strength
@@ -132,7 +132,6 @@ function tile(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement, logos: Logo
     cell: uni('u_cell'),
     rot: uni('u_rot'),
     shade: uni('u_shade'),
-    shadow: uni('u_shadow'),
   }
   gl.uniform1f(uni('u_layers'), LAYERS)
   gl.uniform1f(uni('u_step'), THICK / LAYERS)
@@ -145,7 +144,7 @@ function tile(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement, logos: Logo
   // Spare particles on smaller logos share cells, spread evenly over the shape.
   const homeOf = (logo: number, i: number) => homes[logo][Math.floor((i * homes[logo].length) / n)]
 
-  // Only the front layer is simulated; the other layers and the shadow follow it in the shader.
+  // Only the front layer is simulated; the other layers follow it in the shader.
   let pos = new Float32Array(0)
   let vel = new Float32Array(0)
   let col = new Float32Array(0)
@@ -219,7 +218,6 @@ function tile(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement, logos: Logo
   let burst = 5
   let palette: number[][] = logos.map(() => [0, 0, 0])
   let shade = [0.45, 1, 0]
-  let shadow = [0, 0, 0, 0]
   let reduced = false
   let touch = false
   let shown: number | null = null
@@ -252,8 +250,7 @@ function tile(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement, logos: Logo
     gl.uniform1f(u.cell, canvas.width / grid)
     gl.uniform2f(u.rot, rot.x, rot.y)
     gl.uniform3fv(u.shade, shade)
-    gl.uniform4fv(u.shadow, shadow)
-    gl.drawArraysInstanced(gl.POINTS, 0, n, LAYERS + 1)
+    gl.drawArraysInstanced(gl.POINTS, 0, n, LAYERS)
   }
 
   // Slow sway while lively, blended into a tilt toward the pointer. Returns whether it's moving.
@@ -483,9 +480,6 @@ function tile(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement, logos: Logo
       const light = theme === 'light'
       palette = logos.map((l) => brand(l.icon.hex, bg, light))
       shade = light ? [0.45, 1, 0.25] : [0.45, 1, 0.3]
-      // A faint, sparse dither: grey on paper, black on the dark page. Enough to lift the slab
-      // without a black smudge under it.
-      shadow = light ? [...cssColor('subtle'), 0.1] : [0, 0, 0, 0.3]
       wake()
     },
     setReduced(value: boolean) {
