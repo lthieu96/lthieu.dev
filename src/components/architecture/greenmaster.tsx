@@ -257,7 +257,7 @@ export function GreenMasterArchitecture() {
   const stageRef = useRef<HTMLDivElement>(null)
   const paperRef = useRef<HTMLDivElement>(null)
   const barRefs = useRef<HTMLElement[]>([])
-  const { clock, renderRef, playing, setPlaying } = useFigureClock(frameRef, {
+  const { clock, renderRef, playing, setPlaying, speed, setSpeed } = useFigureClock(frameRef, {
     still: REDUCED_CHAPTER * CHAPTER_MS + CHAPTER_MS / 2,
   })
   const [narrow, setNarrow] = useState(false)
@@ -438,6 +438,8 @@ export function GreenMasterArchitecture() {
       <Track
         playing={playing}
         onToggle={() => setPlaying(!playing)}
+        speed={speed}
+        onSpeed={setSpeed}
         labels={CHAPTERS.map((c) => c.k)}
         current={chapter}
         onJump={jump}

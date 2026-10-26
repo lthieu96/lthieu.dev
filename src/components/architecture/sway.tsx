@@ -361,10 +361,13 @@ export function SwayArchitecture() {
   const nodeRefs = useRef<Partial<Record<NodeId, HTMLButtonElement>>>({})
   const barRefs = useRef<HTMLElement[]>([])
   // Reduced motion: a still of the order on the exchange, stepped by hand.
-  const { reduce, clock, renderRef, playing, setPlaying } = useFigureClock(frameRef, {
-    still: stageEnd(3),
-    ambient: true,
-  })
+  const { reduce, clock, renderRef, playing, setPlaying, speed, setSpeed } = useFigureClock(
+    frameRef,
+    {
+      still: stageEnd(3),
+      ambient: true,
+    },
+  )
   const [narrow, setNarrow] = useState(false)
   const [routes, setRoutes] = useState<Routes>({ d: {}, labels: [] })
   const [view, setView] = useState<View>({
@@ -612,6 +615,8 @@ export function SwayArchitecture() {
       <Track
         playing={playing}
         onToggle={() => setPlaying(!playing)}
+        speed={speed}
+        onSpeed={setSpeed}
         labels={STAGES.map((s) => s.k)}
         current={view.stage}
         onJump={jump}

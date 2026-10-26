@@ -256,9 +256,12 @@ export function CerebroArchitecture() {
   const nodeRefs = useRef<Partial<Record<NodeId, HTMLButtonElement>>>({})
   const barRefs = useRef<HTMLElement[]>([])
   // Reduced motion: a numbered still, mid-collect.
-  const { reduce, clock, renderRef, playing, setPlaying } = useFigureClock(frameRef, {
-    still: REDUCED_T * 1000,
-  })
+  const { reduce, clock, renderRef, playing, setPlaying, speed, setSpeed } = useFigureClock(
+    frameRef,
+    {
+      still: REDUCED_T * 1000,
+    },
+  )
   const [narrow, setNarrow] = useState(false)
   const [d, setD] = useState<Record<string, string>>({})
   const [view, setView] = useState(() => viewAt(0))
@@ -503,6 +506,8 @@ export function CerebroArchitecture() {
       <Track
         playing={playing}
         onToggle={() => setPlaying(!playing)}
+        speed={speed}
+        onSpeed={setSpeed}
         labels={CHAPTERS.map((c) => c.k)}
         current={view.chap}
         onJump={jump}

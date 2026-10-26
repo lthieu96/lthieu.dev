@@ -1,3 +1,4 @@
+import NumberFlow from '@number-flow/react'
 import { Pause, Play } from 'lucide-react'
 import {
   type FocusEvent,
@@ -47,7 +48,7 @@ export const wave = (k: number) =>
  * The clock a figure runs on, in ms since it started (take `% loop` for the place in the loop).
  * While playing and on screen it advances and calls `renderRef` every frame; paused or off screen
  * it stops asking for frames, unless `ambient` motion (Sway's price ticks) should keep drifting.
- * Reduced motion starts paused on the `still` frame.
+ * Reduced motion starts paused on the `still` frame. `speed` scales how fast it runs.
  */
 export function useFigureClock(
   target: RefObject<Element | null>,
@@ -57,6 +58,7 @@ export function useFigureClock(
   const clock = useRef(0)
   const renderRef = useRef<() => void>(undefined)
   const [playing, setPlaying] = useState(true)
+  const [speed, setSpeed] = useState(1)
 
   useEffect(() => {
     if (reduce) clock.current = still
@@ -70,7 +72,7 @@ export function useFigureClock(
     let visible = true
     const frame = (now: number) => {
       raf = 0
-      if (playing) clock.current += Math.min(64, now - (last || now))
+      if (playing) clock.current += Math.min(64, now - (last || now)) * speed
       last = now
       renderRef.current?.()
       if (visible && (playing || drift)) raf = requestAnimationFrame(frame)
@@ -90,9 +92,9 @@ export function useFigureClock(
       cancelAnimationFrame(raf)
       io.disconnect()
     }
-  }, [target, playing, drift])
+  }, [target, playing, drift, speed])
 
-  return { reduce, clock, renderRef, playing, setPlaying }
+  return { reduce, clock, renderRef, playing, setPlaying, speed, setSpeed }
 }
 
 /**
@@ -281,16 +283,24 @@ export function Detail({
   )
 }
 
+const two = { minimumIntegerDigits: 2 }
+const SPEEDS = [1, 1.5, 2, 0.5]
+const iconSwap =
+  '[grid-area:1/1] transition-[opacity,scale,filter] duration-200 ease-out motion-reduce:transition-none'
+const iconOff = 'scale-50 opacity-0 blur-[2px]'
 const pad = (n: number) => String(n).padStart(2, '0')
 
 /**
- * Play/pause and a thin segment per step, filled from the figure's clock through `barRefs`.
+ * Play/pause, a speed button that cycles through SPEEDS, and a thin segment per step, filled
+ * from the figure's clock through `barRefs`.
  * Click a segment to jump, drag across them to scrub, K to play or pause. Hovering a segment names
  * its step where the counter sits; `marked` tints the steps the selected part takes part in.
  */
 export function Track({
   playing,
   onToggle,
+  speed,
+  onSpeed,
   labels,
   current,
   onJump,
@@ -300,6 +310,8 @@ export function Track({
 }: {
   playing: boolean
   onToggle: () => void
+  speed: number
+  onSpeed: (speed: number) => void
   labels: string[]
   current: number
   onJump: (i: number) => void
@@ -341,7 +353,6 @@ export function Track({
     buttons.current[j]?.focus()
     onJump(j)
   }
-  const shown = hover ?? current
   return (
     <div data-controls className="mt-4 flex items-center gap-3 border-line border-t pt-3">
       <button
@@ -350,15 +361,29 @@ export function Track({
         aria-keyshortcuts="K"
         title={playing ? 'Pause (K)' : 'Play (K)'}
         onClick={onToggle}
-        className="grid size-7 flex-none place-items-center rounded-full border border-edge bg-card text-fg transition-colors duration-150 hover:bg-hover"
+        className="grid size-7 flex-none cursor-pointer place-items-center rounded-full border border-edge bg-card text-fg transition-[background-color,scale] duration-150 ease-out hover:bg-hover active:scale-90 motion-reduce:transition-none"
       >
-        {playing ? <Pause size={12} aria-hidden /> : <Play size={12} aria-hidden />}
+        {/* Both icons stay mounted in one cell, so the swap is a blur-and-scale crossfade. */}
+        <Pause size={12} aria-hidden className={`${iconSwap} ${playing ? '' : iconOff}`} />
+        <Play size={12} aria-hidden className={`${iconSwap} ${playing ? iconOff : ''}`} />
+      </button>
+      {/* Fixed width, so going from 2× to 1.5× never resizes the segments. */}
+      <button
+        type="button"
+        aria-label={`Playback speed ${speed}×`}
+        title="Playback speed"
+        onClick={() => onSpeed(SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length])}
+        className="w-[4ch] flex-none cursor-pointer text-left font-mono text-meta text-subtle tabular-nums transition-[color,scale] duration-150 ease-out hover:text-fg active:scale-90 motion-reduce:transition-none"
+      >
+        {/* A crossfade, not NumberFlow: speed is a choice, so it shouldn't roll through 1.3, 1.4… */}
+        <Swap k={speed}>{speed}×</Swap>
       </button>
       {/* A press that moves more than 4px scrubs (pausing while it does); a plain click still jumps.
-          pan-y keeps the page scrolling on phones. */}
+          pan-y keeps the page scrolling on phones. The row fills the controls' height plus 8px above
+          and below, gaps included, so a hand drifting off the 2px line doesn't flip to an arrow. */}
       <div
         ref={row}
-        className="flex min-w-0 flex-1 touch-pan-y gap-1"
+        className="-my-2 flex min-w-0 flex-1 cursor-pointer touch-pan-y gap-1 self-stretch"
         onPointerLeave={() => setHover(null)}
         onPointerDown={(e) => {
           drag.current = { x: e.clientX, resume: playing, moving: false }
@@ -411,12 +436,21 @@ export function Track({
           </button>
         ))}
       </div>
-      {/* Fixed width, so naming a step on hover never resizes the segments. */}
+      {/* Fixed width, so naming a step on hover never resizes the segments. One key for the counter:
+          its digits roll from step to step instead of the whole label cross-fading. */}
       <Swap
-        k={hover === null ? `n${current}` : `h${hover}`}
+        k={hover === null ? 'n' : `h${hover}`}
         className="w-[10ch] flex-none whitespace-nowrap text-right font-mono text-meta text-subtle tabular-nums"
       >
-        {hover === null ? `${pad(shown + 1)}/${pad(labels.length)}` : labels[hover]}
+        {hover === null ? (
+          <span>
+            {/* -my-1 cancels NumberFlow's padding for its fade mask, so the counter keeps the
+                label's line height and the swap on hover doesn't nudge it a pixel. */}
+            <NumberFlow value={current + 1} format={two} className="-my-1" />/{pad(labels.length)}
+          </span>
+        ) : (
+          labels[hover]
+        )}
       </Swap>
     </div>
   )
