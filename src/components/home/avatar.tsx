@@ -260,7 +260,7 @@ function rain(gl: WebGL2RenderingContext, el: HTMLCanvasElement, onIdle: () => v
     Object.assign(ptr, { x: e.clientX, y: e.clientY, on: true })
     if (!still) {
       shakes.push({ x: e.clientX, y: e.clientY, t: e.timeStamp })
-      while (e.timeStamp - shakes[0].t > 1000) shakes.shift()
+      while (e.timeStamp - shakes[0].t > 2500) shakes.shift()
       // Shaking on keeps the ∞ up; it lingers HOLD_S after the last shake.
       if (isShake(shakes)) hold = HOLD_S
     }
