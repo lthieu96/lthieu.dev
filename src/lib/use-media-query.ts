@@ -21,11 +21,13 @@ export function useReducedMotion() {
 }
 
 // The footer's "enable animation" switch. It lives on <html> as data-motion, so CSS sees it too
-// (the motion-reduce variant in app.css), and lasts until a reload.
+// (the motion-reduce variant in app.css), and is saved so themeScript restores it on the next load.
 const forcedListeners = new Set<() => void>()
 
 export function forceMotion(on: boolean) {
   document.documentElement.toggleAttribute('data-motion', on)
+  if (on) localStorage.setItem('motion', '1')
+  else localStorage.removeItem('motion')
   for (const l of forcedListeners) l()
 }
 

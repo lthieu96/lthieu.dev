@@ -8,8 +8,8 @@ const root = () => document.documentElement
 /** Light unless the visitor picked dark. The prerendered <html> already says light. */
 export const DEFAULT_THEME: Theme = 'light'
 
-/** Runs inline in <head> before first paint and applies a saved choice, if there is one. */
-export const themeScript = `(function(){try{var s=localStorage.getItem('${KEY}');if(s==='light'||s==='dark')document.documentElement.dataset.theme=s}catch(e){}})()`
+/** Runs inline in <head> before first paint and applies a saved theme and motion choice, if any. */
+export const themeScript = `(function(){try{var s=localStorage.getItem('${KEY}');if(s==='light'||s==='dark')document.documentElement.dataset.theme=s;if(localStorage.getItem('motion'))document.documentElement.setAttribute('data-motion','')}catch(e){}})()`
 
 /** The theme on <html>. */
 export function useTheme(): Theme {

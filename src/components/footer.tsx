@@ -116,8 +116,8 @@ function BuildCredits() {
 }
 
 /**
- * Shown only when the system asks for reduced motion: turns the site's animation back on until a
- * reload, for visitors who'd like to see the demos and shaders anyway.
+ * Shown only when the system asks for reduced motion: turns the site's animation back on (remembered
+ * across visits), for visitors who'd like to see the demos and shaders anyway.
  */
 function MotionSwitch() {
   const reduce = useMediaQuery('(prefers-reduced-motion: reduce)')
@@ -133,7 +133,7 @@ function MotionSwitch() {
         className="inline-flex cursor-pointer items-center gap-1.5 text-accent decoration-accent/50 underline-offset-[3px] hover:underline"
       >
         {forced ? <Pause size={11} aria-hidden /> : <Play size={11} aria-hidden />}
-        {forced ? 'Reduce motion on this page' : 'Enable animation on this page'}
+        {forced ? 'Reduce motion' : 'Enable animation'}
       </button>
     </p>
   )
