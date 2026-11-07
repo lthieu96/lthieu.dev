@@ -14,6 +14,8 @@ export const resume = {
   ],
   summary:
     'Full-stack developer with 3+ years of experience. I build products end to end: web apps, mobile apps and the backend that keeps them running, most recently for a crypto app with **200K+ users**.',
+  // Mirrors resume/resume-berkeley.tex (the downloadable PDF). Change both together.
+  // "Company · role": the role sits on its own line under the company.
   experience: [
     {
       title: 'KVY Technology · Software Engineer',
@@ -25,42 +27,63 @@ export const resume = {
           title: 'Cerebro ([cerebro.xyz](https://cerebro.xyz)) · crypto portfolio tracker',
           when: '2025 – 2026',
           bullets: [
-            'Built the Next.js web app and Node.js backend as the product grew to **200K+ users** and **7K+ daily active users**.',
-            'Built data collection across **8 exchanges** and **6 on-chain platforms**, plus the admin dashboard the team used to watch it.',
+            'Built the Next.js web app and Node.js backend as it grew to **200K+ users** and **7K+ daily active users**.',
+            'Integrated **8 exchanges** and **6 on-chain platforms** for data collection, plus its admin dashboard.',
           ],
         },
         {
           title: 'Sway ([sway.fun](https://sway.fun)) · narrative trading app',
           when: '2026 – now',
           bullets: [
-            "Built a Rust service that shares the exchange's request limit so trades always go first.",
-            'Wrote the Solidity contract that pays fee rewards on Arbitrum, plus the backend that batches and checks payouts.',
-            'Split completed-trade matching into its own service with lag alerts; built notifications and app screens in Expo.',
+            'Built reward settlement: payout backend, Solidity claim/clawback contract on Arbitrum, drift alarms.',
+            'Moved trade fills into a standalone NestJS stream service with per-tenant queues and lag alerts.',
+            'Wrote a Rust gateway that budgets the exchange rate limit across services and streams prices.',
+            'Built notifications end to end, from risk alerts to the Expo inbox, plus wallet and P&L screens.',
           ],
         },
       ],
     },
     {
-      title: 'Madeezi · Freelance Full-Stack Developer',
+      title: 'Madeezi · Freelance Developer',
       when: '2025 – 2026',
-      bullets: [
-        'Built GreenMaster Go for **3,800+ customers** and **200 technicians**: Rails API, React admin and Expo app ([case study](https://lthieu.dev/work/greenmaster)).',
-        'Customers sign off each visit on the technician’s phone, by signature or a one-time code via Zalo or SMS.',
+      bullets: [],
+      groups: [
+        {
+          title:
+            'GreenMaster Go ([lthieu.dev/work/greenmaster](https://lthieu.dev/work/greenmaster)) · field-service app',
+          when: '',
+          bullets: [
+            'Delivered the Rails API, React admin and Expo app for **3,800+ customers** and **200 technicians**.',
+            'Implemented visit sign-off on the technician’s phone by signature or a Zalo/SMS one-time code.',
+          ],
+        },
       ],
     },
     {
-      title: 'BenKon · Software Engineer',
-      when: '2024 – 2025',
+      title: 'BenKon · Front-end Intern → Software Engineer',
+      when: '2023 – 2025',
       bullets: [
         'Re-architected the admin dashboard, cutting page load time by **30%**.',
-        'Shipped the BenKon App and Surface App for device control and meeting rooms; built a CMS, i18n system and icon library.',
+        'Shipped the BenKon App and Surface App for device control and meeting rooms, plus a CMS and i18n.',
+        'As an intern, created an interactive floor-plan and equipment layout editor in React and SVG, solo.',
+      ],
+    },
+  ],
+  projects: [
+    {
+      title:
+        'EngCoach ([github.com/lthieu96/engcoach](https://github.com/lthieu96/engcoach)) · Next.js, Supabase, AI SDK',
+      when: '',
+      bullets: [
+        'AI coach for workplace English: writing corrections, spaced-repetition flashcards, voice roleplay.',
       ],
     },
     {
-      title: 'BenKon · Front-end Developer Intern',
-      when: '2023 – 2024',
+      title:
+        'Chat Polish ([github.com/lthieu96/paseo-chat-polish](https://github.com/lthieu96/paseo-chat-polish)) · Paseo plugin',
+      when: '',
       bullets: [
-        'Built an interactive floor-plan and equipment layout editor in React and SVG, solo.',
+        'Redraws the agent chat, with themes, a live-preview dashboard and interactive HTML pages.',
       ],
     },
   ],
@@ -72,7 +95,7 @@ export const resume = {
     { label: 'Infra', value: 'Docker, GCP, GitHub Actions, Sentry' },
   ],
   education: {
-    title: 'University of Information Technology, VNUHCM · Software Engineering, Very Good',
+    title: 'University of Information Technology, VNUHCM · Software Engineering, GPA 8.24/10',
     when: '2019 – 2025',
   },
 }

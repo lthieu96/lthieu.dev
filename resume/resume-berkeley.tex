@@ -1,0 +1,135 @@
+% Hieu Le · one-page résumé, A4.
+% Mirrors the /resume page (src/routes/resume.tsx): one column, Berkeley Mono throughout. Hierarchy comes
+% from size, weight, tone, indent and oblique.
+%
+% Build:  tectonic resume-berkeley.tex && uv run embed-fonts.py resume-berkeley.pdf
+%         (the second step embeds the whole Berkeley Mono files; tectonic leaves them out)
+%         then copy resume-berkeley.pdf to ../public/resume.pdf, the site's download.
+% Restyle: everything you'd want to change is in the "Style" block below.
+
+\documentclass[a4paper]{article}
+\usepackage[top=14.8mm,bottom=12mm,left=16.9mm,right=16.9mm]{geometry}
+\usepackage{fontspec}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\frenchspacing  % one space after colons and periods, like the page
+\raggedright    % left-aligned, not justified, like the page
+
+% ─── Style ───────────────────────────────────────────────────────────────────
+% Berkeley Mono is a licensed font: loaded from the system (~/Library/Fonts), never copied into the repo.
+\setmainfont{Berkeley Mono}[
+  UprightFont = * Regular, BoldFont = * SemiBold,
+  ItalicFont = * Oblique, BoldItalicFont = * SemiBold Oblique,
+  FontFace = {m}{n}{* Medium},
+  LetterSpace = -2,  % mono runs a little loose at small sizes
+]
+\newcommand{\medium}{\fontseries{m}\selectfont}  % Berkeley Mono Medium
+\newcommand{\semibold}{\bfseries}                  % Berkeley Mono SemiBold
+
+\definecolor{ink}{HTML}{1A1A1A}      % headings, names, bold numbers
+\definecolor{body}{HTML}{3D3D3D}     % bullet text, a shade lighter than headings
+\definecolor{role}{HTML}{555555}     % headline, contact
+\definecolor{sub}{HTML}{666666}      % what follows "·" in a title
+\definecolor{date}{HTML}{777777}     % dates, skill keys
+\definecolor{label}{HTML}{8A8A8A}    % section labels
+\definecolor{dot}{HTML}{999999}      % bullet dots
+\definecolor{hair}{HTML}{E5E5E5}     % rule under the header
+
+\newlength{\secgap}\setlength{\secgap}{17pt}     % between sections
+\newcommand{\sz}[1]{\fontsize{#1}{1.5\dimexpr #1\relax}\selectfont}
+\newcommand{\hi}[1]{{\semibold\color{ink}#1}}       % a number worth seeing at a glance
+
+\color{ink}
+
+% ─── Building blocks ─────────────────────────────────────────────────────────
+\newcommand{\cvsection}[1]{%
+  \par\vspace{\secgap}%
+  \noindent{\sz{7.5pt}\semibold\addfontfeatures{LetterSpace=13}\MakeUppercase{#1}}\hspace{8pt}{\color{hair}\leaders\hrule height 3pt depth -2.4pt\hfill}\par\vspace{8pt}}
+\newcommand{\titlerow}[4]{%
+  \noindent{\sz{#1}#2}\ifx\relax#3\relax\else{\sz{#1}\color{sub}\nobreakspace·\space{\sz{8pt}\itshape#3}}\fi
+  \hfill{\sz{8pt}\color{date}#4}\par}
+\newcommand{\job}[3]{\par\addvspace{11pt}\global\ptmargin=10pt\noindent{\sz{9.5pt}\semibold #1}\hfill{\sz{8pt}\color{date}#3}\par
+  \noindent{\sz{8pt}\itshape\color{sub}#2}\par\vspace{3pt}}
+\newcommand{\product}[3]{\par\addvspace{7pt}\global\ptmargin=24pt\titlerow{8.5pt}{\hspace*{14pt}\medium #1}{#2}{{\color{dot}#3}}\vspace{3pt}}
+\newcommand{\project}[3]{\par\addvspace{7pt}\global\ptmargin=10pt\titlerow{8.5pt}{\medium #1}{#2}{#3}\vspace{3pt}}
+\setlist[itemize]{label={\color{dot}•}, labelsep=4.5pt, itemsep=4.5pt, parsep=0pt, topsep=0pt, partopsep=0pt}
+\newlength{\ptmargin}\setlength{\ptmargin}{10pt}
+\newenvironment{points}{\begin{itemize}[leftmargin=\ptmargin]\sz{8pt}\color{body}}{\end{itemize}}
+
+\newcommand{\skill}[2]{\noindent\makebox[62pt][l]{\color{date}#1}{#2}\par\vspace{3pt}}
+
+% ─── Content ─────────────────────────────────────────────────────────────────
+\begin{document}
+
+% Header
+\begin{minipage}[b]{0.6\linewidth}
+  {\fontsize{19pt}{22pt}\selectfont\semibold\addfontfeatures{LetterSpace=-2.1}Hieu Le}\par\vspace{1.5pt}
+  {\sz{8.75pt}\color{role}Full-Stack Developer · Ho Chi Minh City}
+\end{minipage}\hfill
+\begin{minipage}[b]{0.4\linewidth}\raggedleft\sz{8pt}\color{role}
+  \href{mailto:lthieu9601@gmail.com}{lthieu9601@gmail.com}\\
+  \href{tel:+84961500817}{+84 961 500 817}\\
+  \href{https://github.com/lthieu96}{github.com/lthieu96}\\
+  \href{https://linkedin.com/in/lthieu96}{linkedin.com/in/lthieu96}\\
+  \href{https://lthieu.dev}{lthieu.dev}
+\end{minipage}
+\par
+
+\cvsection{Summary}
+{\sz{8.5pt}Full-stack developer with 3+ years of experience. I build products end to end: web apps,
+mobile apps and the backend that keeps them running, most recently for a crypto app with \hi{200K+ users}.}
+
+\cvsection{Experience}
+\job{KVY Technology}{Software Engineer}{2025 – now}
+\product{Cerebro (\href{https://cerebro.xyz}{cerebro.xyz})}{crypto portfolio tracker}{2025 – 2026}
+\begin{points}
+  \item Built the Next.js web app and Node.js backend as it grew to \hi{200K+ users} and \hi{7K+ daily active users}.
+  \item Integrated \hi{8 exchanges} and \hi{6 on-chain platforms} for data collection, plus its admin dashboard.
+\end{points}
+\product{Sway (\href{https://sway.fun}{sway.fun})}{narrative trading app}{2026 – now}
+\begin{points}
+  \item Built reward settlement: payout backend, Solidity claim/clawback contract on Arbitrum, drift alarms.
+  \item Moved trade fills into a standalone NestJS stream service with per-tenant queues and lag alerts.
+  \item Wrote a Rust gateway that budgets the exchange rate limit across services and streams prices.
+  \item Built notifications end to end, from risk alerts to the Expo inbox, plus wallet and P\&L screens.
+\end{points}
+
+\job{Madeezi}{Freelance Developer}{2025 – 2026}
+\product{GreenMaster Go (\href{https://lthieu.dev/work/greenmaster}{lthieu.dev/work/greenmaster})}{field-service app}{}
+\begin{points}
+  \item Delivered the Rails API, React admin and Expo app for \hi{3,800+ customers} and \hi{200 technicians}.
+  \item Implemented visit sign-off on the technician’s phone by signature or a Zalo/SMS one-time code.
+\end{points}
+
+\job{BenKon}{Front-end Intern → Software Engineer}{2023 – 2025}
+\begin{points}
+  \item Re-architected the admin dashboard, cutting page load time by \hi{30\%}.
+  \item Shipped the BenKon App and Surface App for device control and meeting rooms, plus a CMS and i18n.
+  \item As an intern, created an interactive floor-plan and equipment layout editor in React and SVG, solo.
+\end{points}
+
+\cvsection{Projects}
+\project{EngCoach (\href{https://github.com/lthieu96/engcoach}{github.com/lthieu96/engcoach})}{Next.js, Supabase, AI SDK}{}
+\begin{points}
+  \item AI coach for workplace English: writing corrections, spaced-repetition flashcards, voice roleplay.
+\end{points}
+\project{Chat Polish (\href{https://github.com/lthieu96/paseo-chat-polish}{github.com/lthieu96/paseo-chat-polish})}{Paseo plugin}{}
+\begin{points}
+  \item Redraws the agent chat, with themes, a live-preview dashboard and interactive HTML pages.
+\end{points}
+
+\cvsection{Skills}
+\sz{8pt}
+\skill{Languages}{TypeScript, JavaScript, Ruby, SQL, Rust, Solidity}
+\skill{Frontend}{React, Next.js, React Native / Expo}
+\skill{Backend}{Node.js, NestJS, Express, Rails}
+\skill{Data}{MongoDB, Redis, PostgreSQL}
+\skill{Infra}{Docker, GCP, GitHub Actions, Sentry}
+
+\cvsection{Education}
+\titlerow{8pt}{\medium University of Information Technology, VNUHCM}{Software Engineering, GPA 8.24/10}{2019 – 2025}
+
+\end{document}

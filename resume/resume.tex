@@ -1,6 +1,6 @@
-% Hieu Le · one-page résumé, A4.
+% Hieu Le · one-page résumé, A4. Same content and layout as resume-berkeley.tex (the downloadable one), set in Geist.
 % Mirrors the /resume page (src/routes/resume.tsx): one column, Geist throughout. Hierarchy comes
-% from size, weight and tone only. Sizes are the page's px × 0.75 (CSS px to pt).
+% from size, weight, tone, indent and oblique.
 %
 % Build:  tectonic resume.tex        (or: xelatex resume.tex)
 % Restyle: everything you'd want to change is in the "Style" block below.
@@ -20,6 +20,7 @@
 \setmainfont{Geist}[
   Path = fonts/, Extension = .otf,
   UprightFont = *-Regular, BoldFont = *-SemiBold,
+  ItalicFont = *-Regular, ItalicFeatures = {FakeSlant = 0.18},  % no Geist italic in fonts/
   FontFace = {m}{n}{*-Medium},
   Numbers = Lining,
 ]
@@ -35,7 +36,7 @@
 \definecolor{dot}{HTML}{999999}      % bullet dots
 \definecolor{hair}{HTML}{E5E5E5}     % rule under the header
 
-\newlength{\secgap}\setlength{\secgap}{16.5pt}     % between sections (22px)
+\newlength{\secgap}\setlength{\secgap}{15pt}     % between sections
 \newcommand{\sz}[1]{\fontsize{#1}{1.5\dimexpr #1\relax}\selectfont}
 \newcommand{\hi}[1]{{\semibold\color{ink}#1}}       % a number worth seeing at a glance
 
@@ -44,19 +45,17 @@
 % ─── Building blocks ─────────────────────────────────────────────────────────
 \newcommand{\cvsection}[1]{%
   \par\vspace{\secgap}%
-  {\sz{7.9pt}\semibold\color{label}\addfontfeatures{LetterSpace=13}\MakeUppercase{#1}}\par\vspace{6pt}}
-
-% A title row: #1 size, #2 name (with its weight), #3 what follows "·", #4 date on the right.
+  \noindent{\sz{7.9pt}\semibold\addfontfeatures{LetterSpace=13}\MakeUppercase{#1}}\hspace{8pt}{\color{hair}\leaders\hrule height 3pt depth -2.4pt\hfill}\par\vspace{8pt}}
 \newcommand{\titlerow}[4]{%
-  \noindent{\sz{#1}#2}\ifx\relax#3\relax\else{\sz{#1}\color{sub}\nobreakspace·\space#3}\fi
+  \noindent{\sz{#1}#2}\ifx\relax#3\relax\else{\sz{#1}\color{sub}\nobreakspace·\space{\sz{9pt}\itshape#3}}\fi
   \hfill{\sz{9pt}\color{date}#4}\par}
-
-\newcommand{\job}[3]{\par\addvspace{7.5pt}\titlerow{10.5pt}{\semibold #1}{#2}{#3}\vspace{3pt}}       % company · role
-\newcommand{\product}[3]{\par\addvspace{4.5pt}\titlerow{9.4pt}{\medium #1}{#2}{#3}\vspace{3pt}}
-
-\setlist[itemize]{label={\color{dot}•}, leftmargin=10pt, labelsep=4.5pt,
-  itemsep=3pt, parsep=0pt, topsep=0pt, partopsep=0pt}
-\newenvironment{points}{\begin{itemize}\sz{9pt}\color{body}}{\end{itemize}}
+\newcommand{\job}[3]{\par\addvspace{9pt}\global\ptmargin=10pt\noindent{\sz{10.5pt}\semibold #1}\hfill{\sz{9pt}\color{date}#3}\par
+  \noindent{\sz{9pt}\itshape\color{sub}#2}\par\vspace{3pt}}
+\newcommand{\product}[3]{\par\addvspace{5pt}\global\ptmargin=24pt\titlerow{9.4pt}{\hspace*{14pt}\medium #1}{#2}{{\color{dot}#3}}\vspace{3pt}}
+\newcommand{\project}[3]{\par\addvspace{5pt}\global\ptmargin=10pt\titlerow{9.4pt}{\medium #1}{#2}{#3}\vspace{3pt}}
+\setlist[itemize]{label={\color{dot}•}, labelsep=4.5pt, itemsep=3pt, parsep=0pt, topsep=0pt, partopsep=0pt}
+\newlength{\ptmargin}\setlength{\ptmargin}{10pt}
+\newenvironment{points}{\begin{itemize}[leftmargin=\ptmargin]\sz{9pt}\color{body}}{\end{itemize}}
 
 \newcommand{\skill}[2]{\noindent\makebox[69pt][l]{\color{date}#1}{#2}\par\vspace{3pt}}
 
@@ -75,7 +74,7 @@
   \href{https://linkedin.com/in/lthieu96}{linkedin.com/in/lthieu96}\\
   \href{https://lthieu.dev}{lthieu.dev}
 \end{minipage}
-\par\vspace{10.5pt}{\color{hair}\hrule height .75pt}
+\par
 
 \cvsection{Summary}
 {\sz{9.4pt}Full-stack developer with 3+ years of experience. I build products end to end: web apps,
@@ -85,31 +84,39 @@ mobile apps and the backend that keeps them running, most recently for a crypto 
 \job{KVY Technology}{Software Engineer}{2025 – now}
 \product{Cerebro (\href{https://cerebro.xyz}{cerebro.xyz})}{crypto portfolio tracker}{2025 – 2026}
 \begin{points}
-  \item Built the Next.js web app and Node.js backend as the product grew to \hi{200K+ users} and \hi{7K+ daily active users}.
-  \item Built data collection across \hi{8 exchanges} and \hi{6 on-chain platforms}, plus the admin dashboard the team used to watch it.
+  \item Built the Next.js web app and Node.js backend as it grew to \hi{200K+ users} and \hi{7K+ daily active users}.
+  \item Integrated \hi{8 exchanges} and \hi{6 on-chain platforms} for data collection, plus its admin dashboard.
 \end{points}
 \product{Sway (\href{https://sway.fun}{sway.fun})}{narrative trading app}{2026 – now}
 \begin{points}
-  \item Built a Rust service that shares the exchange’s request limit so trades always go first.
-  \item Wrote the Solidity contract that pays fee rewards on Arbitrum, plus the backend that batches and checks payouts.
-  \item Split completed-trade matching into its own service with lag alerts; built notifications and app screens in Expo.
+  \item Built reward settlement: payout backend, Solidity claim/clawback contract on Arbitrum, drift alarms.
+  \item Moved trade fills into a standalone NestJS stream service with per-tenant queues and lag alerts.
+  \item Wrote a Rust gateway that budgets the exchange rate limit across services and streams prices.
+  \item Built notifications end to end, from risk alerts to the Expo inbox, plus wallet and P\&L screens.
 \end{points}
 
-\job{Madeezi}{Freelance Full-Stack Developer}{2025 – 2026}
+\job{Madeezi}{Freelance Developer}{2025 – 2026}
+\product{GreenMaster Go (\href{https://lthieu.dev/work/greenmaster}{lthieu.dev/work/greenmaster})}{field-service app}{}
 \begin{points}
-  \item Built GreenMaster Go for \hi{3,800+ customers} and \hi{200 technicians}: Rails API, React admin and Expo app (\href{https://lthieu.dev/work/greenmaster}{case study}).
-  \item Customers sign off each visit on the technician’s phone, by signature or a one-time code via Zalo or SMS.
+  \item Delivered the Rails API, React admin and Expo app for \hi{3,800+ customers} and \hi{200 technicians}.
+  \item Implemented visit sign-off on the technician’s phone by signature or a Zalo/SMS one-time code.
 \end{points}
 
-\job{BenKon}{Software Engineer}{2024 – 2025}
+\job{BenKon}{Front-end Intern → Software Engineer}{2023 – 2025}
 \begin{points}
   \item Re-architected the admin dashboard, cutting page load time by \hi{30\%}.
-  \item Shipped the BenKon App and Surface App for device control and meeting rooms; built a CMS, i18n system and icon library.
+  \item Shipped the BenKon App and Surface App for device control and meeting rooms, plus a CMS and i18n.
+  \item As an intern, created an interactive floor-plan and equipment layout editor in React and SVG, solo.
 \end{points}
 
-\job{BenKon}{Front-end Developer Intern}{2023 – 2024}
+\cvsection{Projects}
+\project{EngCoach (\href{https://github.com/lthieu96/engcoach}{github.com/lthieu96/engcoach})}{Next.js, Supabase, AI SDK}{}
 \begin{points}
-  \item Built an interactive floor-plan and equipment layout editor in React and SVG, solo.
+  \item AI coach for workplace English: writing corrections, spaced-repetition flashcards, voice roleplay.
+\end{points}
+\project{Chat Polish (\href{https://github.com/lthieu96/paseo-chat-polish}{github.com/lthieu96/paseo-chat-polish})}{Paseo plugin}{}
+\begin{points}
+  \item Redraws the agent chat, with themes, a live-preview dashboard and interactive HTML pages.
 \end{points}
 
 \cvsection{Skills}
@@ -121,6 +128,6 @@ mobile apps and the backend that keeps them running, most recently for a crypto 
 \skill{Infra}{Docker, GCP, GitHub Actions, Sentry}
 
 \cvsection{Education}
-\titlerow{9.4pt}{\medium University of Information Technology, VNUHCM}{Software Engineering, Very Good}{2019 – 2025}
+\titlerow{9pt}{\medium University of Information Technology, VNUHCM}{Software Engineering, GPA 8.24/10}{2019 – 2025}
 
 \end{document}

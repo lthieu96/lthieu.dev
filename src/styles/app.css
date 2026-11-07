@@ -11,6 +11,37 @@
   font-display: swap;
 }
 
+/* Résumé only (/resume), to match the downloadable PDF. Berkeley Mono by U.S. Graphics Company,
+   Vietnamese build from ~/workspaces/font. Browsers fetch these only on pages that use the font. */
+@font-face {
+  font-family: "Berkeley Mono";
+  src: url("./fonts/berkeley-mono/BerkeleyMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Berkeley Mono";
+  src: url("./fonts/berkeley-mono/BerkeleyMono-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Berkeley Mono";
+  src: url("./fonts/berkeley-mono/BerkeleyMono-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Berkeley Mono";
+  src: url("./fonts/berkeley-mono/BerkeleyMono-Oblique.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
 /* Screens narrower than the A4 resume sheet. Screen only, so printing keeps the A4 layout. */
 @custom-variant narrow-screen (@media screen and (max-width: 860px));
 
@@ -76,6 +107,7 @@
   --font-hand: "Sign Style", cursive;
   /* Handwriting on the GreenMaster paper report figure. Loads only where it is used. */
   --font-script: "Caveat Variable", cursive;
+  --font-resume: "Berkeley Mono", ui-monospace, monospace;
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
