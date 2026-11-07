@@ -27,7 +27,8 @@ export default defineConfig({
         crawlLinks: true,
         failOnError: true,
         // shortcut: crawler treats `/#work` as its own page (TanStack/router#8516); drop when fixed
-        filter: ({ path }) => !path.includes('#'),
+        // The crawler also follows /resume.pdf and rewrites it as text, which corrupts the binary.
+        filter: ({ path }) => !path.includes('#') && !path.endsWith('.pdf'),
       },
       pages: [
         { path: '/sitemap.xml', prerender: { enabled: true, outputPath: '/sitemap.xml' } },
