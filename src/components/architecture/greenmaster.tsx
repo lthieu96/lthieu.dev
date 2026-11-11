@@ -302,7 +302,7 @@ export function GreenMasterArchitecture() {
       setChapter(Math.floor(t / CHAPTER_MS))
       CHAPTERS.forEach((_, i) => {
         const bar = barRefs.current[i]
-        if (bar) bar.style.width = `${clamp((t - i * CHAPTER_MS) / CHAPTER_MS) * 100}%`
+        if (bar) bar.style.translate = `${(clamp((t - i * CHAPTER_MS) / CHAPTER_MS) - 1) * 100}%`
       })
     }
     renderRef.current = render

@@ -214,6 +214,7 @@ function Sway({ on }: { on: boolean }) {
   // SVG ids must be unique: the same detail can be on the page twice (row and preview card).
   const id = useId().replace(/[^\w-]/g, '')
   const svg = useRef<SVGSVGElement>(null)
+  const pulse = useRef<HTMLSpanElement>(null)
   const [live, setLive] = useState(false)
   const [pressed, setPressed] = useState(false)
   // Written straight to the SVG each frame, so React doesn't re-render during the morph.
@@ -236,6 +237,7 @@ function Sway({ on }: { on: boolean }) {
       c.setAttribute('cx', String(ex))
       c.setAttribute('cy', String(ey))
     }
+    pulse.current?.style.setProperty('top', `${16 + ey}px`)
   }
   // Line morph 300ms easeOutCubic (use-area-chart-model.ts), then Bullish is tapped:
   // 0.985 / 0.92 over 120ms, back over 220ms, both Easing.out(cubic) (button.tsx).
@@ -262,7 +264,7 @@ function Sway({ on }: { on: boolean }) {
   const [mx, my] = initial[SWAY_MARKER]
   const [ex, ey] = initial[initial.length - 1]
   return (
-    <div className="h-full bg-white p-4 font-[family-name:ui-rounded,'SF_Pro_Rounded',var(--font-sans)]">
+    <div className="relative h-full bg-white p-4 font-[family-name:ui-rounded,'SF_Pro_Rounded',var(--font-sans)]">
       <svg
         ref={svg}
         aria-hidden
@@ -313,19 +315,7 @@ function Sway({ on }: { on: boolean }) {
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <g>
-          {/* Live pulse: 1 → 3.5, 0.5 → 0 over 1500ms, Easing.out(quad), repeating (area-chart-pulse.tsx). */}
-          <circle
-            className={`end origin-center opacity-0 [transform-box:fill-box] ${live ? 'animate-[sway-pulse_1.5s_cubic-bezier(.5,1,.89,1)_.45s_infinite] motion-reduce:animate-none' : ''}`}
-            cx={ex}
-            cy={ey}
-            r={4}
-            fill="none"
-            stroke="#3BB9FF"
-            strokeWidth={1.5}
-          />
-          <circle className="end" cx={ex} cy={ey} r={4} fill="#3BB9FF" />
-        </g>
+        <circle className="end" cx={ex} cy={ey} r={4} fill="#3BB9FF" />
         <g className="marker" transform={`translate(${mx - 4.5},${my - 5.5}) scale(0.41)`}>
           <circle cx="10.98" cy="13.41" r="19.51" fill="#EF4444" />
           {SWAY_LOGO.map((d) => (
@@ -333,6 +323,14 @@ function Sway({ on }: { on: boolean }) {
           ))}
         </g>
       </svg>
+      {/* Live pulse: 1 → 3.5, 0.5 → 0 over 1500ms, Easing.out(quad), repeating (area-chart-pulse.tsx).
+          The ring the SVG circle drew (r 4, 1.5 stroke), as HTML over the end point (+16px padding):
+          Chrome runs animations on SVG children on the main thread, every frame for as long as it loops. */}
+      <span
+        ref={pulse}
+        className={`pointer-events-none absolute size-[9.5px] -translate-1/2 rounded-full border-[1.5px] border-[#3BB9FF] opacity-0 ${live ? 'animate-[sway-pulse_1.5s_cubic-bezier(.5,1,.89,1)_.45s_infinite] motion-reduce:animate-none' : ''}`}
+        style={{ left: 16 + ex, top: 16 + ey }}
+      />
       <div className="mt-2 flex gap-[3px]">
         <span className="h-[5px] flex-[3.30] rounded-[3px] bg-[#FFC5C5]" />
         <span className="h-[5px] flex-[3.61] rounded-[3px] bg-[#9FC4FF]" />

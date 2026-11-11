@@ -429,15 +429,28 @@ export function SwayArchitecture() {
     const render = () => {
       const t = clock.current % LOOP
       const cur = stageAt(t)
+      // All reads before any write: getPointAtLength makes the browser recalculate style and layout
+      // for whatever was written before it, and interleaving them cost ~5 passes a frame.
+      const tickAt = ticks.map((_, i) => {
+        if (reduce || !tickTotal) return undefined
+        let d = ((performance.now() / TICK_EVERY + i / 3) % 1) * tickTotal
+        let k = tickHops[0]
+        if (d > (lens[k] ?? 0)) {
+          d -= lens[k] ?? 0
+          k = tickHops[1]
+        }
+        return paths[k]?.getPointAtLength(d)
+      })
       let head: DOMPoint | null = null
       let alpha = 1
+      const offsets: [SVGPathElement | undefined, number][] = []
       for (const [i, s] of STAGES.entries()) {
         for (const [j, h] of s.hops.entries()) {
           const path = paths[h]
           if (!path) continue
           const p = i > cur ? 0 : reduce && i === cur ? 1 : clamp((t - starts[i] - j * s.ms) / s.ms)
           const e = ease(p)
-          trails[h]?.setAttribute('stroke-dashoffset', String(1 - e))
+          offsets.push([trails[h], 1 - e])
           if (i === cur && p > 0) {
             head = path.getPointAtLength((lens[h] ?? 0) * e)
             // Fade in as each hop starts and out as it ends (the last one in the gap after its
@@ -448,6 +461,7 @@ export function SwayArchitecture() {
           }
         }
       }
+      for (const [trail, v] of offsets) trail?.setAttribute('stroke-dashoffset', String(v))
       const resting = t > LAST_END
       for (const c of dots) {
         c.setAttribute('opacity', head && !resting ? String(alpha) : '0')
@@ -462,7 +476,7 @@ export function SwayArchitecture() {
       STAGES.forEach((_, i) => {
         const bar = barRefs.current[i]
         const end = starts[i + 1] ?? LOOP
-        if (bar) bar.style.width = `${clamp((t - starts[i]) / (end - starts[i])) * 100}%`
+        if (bar) bar.style.translate = `${(clamp((t - starts[i]) / (end - starts[i])) - 1) * 100}%`
       })
 
       // Ambient price ticks: muted, never accent, off under reduced motion.
@@ -471,13 +485,7 @@ export function SwayArchitecture() {
           c.setAttribute('opacity', '0')
           return
         }
-        let d = ((performance.now() / TICK_EVERY + i / 3) % 1) * tickTotal
-        let k = tickHops[0]
-        if (d > (lens[k] ?? 0)) {
-          d -= lens[k] ?? 0
-          k = tickHops[1]
-        }
-        const pt = paths[k]?.getPointAtLength(d)
+        const pt = tickAt[i]
         if (!pt) return
         c.setAttribute('cx', String(pt.x))
         c.setAttribute('cy', String(pt.y))

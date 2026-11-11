@@ -431,7 +431,7 @@ export function Track({
                 ref={(el) => {
                   if (el) barRefs.current[i] = el
                 }}
-                className={`block h-full w-0 rounded-full ${i === current ? 'bg-accent' : 'bg-fg/25'}`}
+                className={`block h-full -translate-x-full rounded-full ${i === current ? 'bg-accent' : 'bg-fg/25'}`}
               />
             </span>
           </button>

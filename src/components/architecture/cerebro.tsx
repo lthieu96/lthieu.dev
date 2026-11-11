@@ -316,20 +316,27 @@ export function CerebroArchitecture() {
 
     const render = () => {
       const t = (clock.current % LOOP_MS) / 1000
-      PACKETS.forEach(([e, s, dur, back], i) => {
-        const g = dots[i]
+      // All reads before any write: getPointAtLength makes the browser recalculate style and layout
+      // for whatever was written before it, and interleaving them cost a pass per packet.
+      const at = PACKETS.map(([e, s, dur, back]) => {
         const p = paths[e]
         const lt = (t - s) / dur
+        if (lt <= 0 || lt >= 1 || !p?.len) return undefined
+        const u = ease(lt)
+        return { lt, pt: p.el.getPointAtLength((back ? 1 - u : u) * p.len) }
+      })
+      PACKETS.forEach((_, i) => {
+        const g = dots[i]
         if (!g) return
-        if (lt <= 0 || lt >= 1 || !p?.len) {
+        const a = at[i]
+        if (!a) {
           g.style.display = 'none'
           return
         }
+        const { lt, pt } = a
         g.style.display = ''
         // Fade over the first and last 15% so a packet never pops in or out.
         g.style.opacity = String(clamp(Math.min(lt, 1 - lt) / 0.15))
-        const u = ease(lt)
-        const pt = p.el.getPointAtLength((back ? 1 - u : u) * p.len)
         for (const c of g.children) {
           c.setAttribute('cx', String(pt.x))
           c.setAttribute('cy', String(pt.y))
@@ -337,7 +344,7 @@ export function CerebroArchitecture() {
       })
       CHAPTERS.forEach((c, i) => {
         const bar = barRefs.current[i]
-        if (bar) bar.style.width = `${clamp((t - c.s) / (c.e - c.s)) * 100}%`
+        if (bar) bar.style.translate = `${(clamp((t - c.s) / (c.e - c.s)) - 1) * 100}%`
       })
       const next = viewAt(t)
       setView((v) => (sameView(v, next) ? v : next))
