@@ -183,15 +183,21 @@ export function Swap({
   k,
   as = 'span',
   className = '',
+  instant = false,
   children,
 }: {
   k: string | number
   as?: 'span' | 'div' | 'g'
   className?: string
+  /** Change without the crossfade, e.g. moving along a row of labels once one is showing. */
+  instant?: boolean
   children: ReactNode
 }) {
   const [shown, setShown] = useState(k)
   const [old, setOld] = useState<{ k: string | number; node: ReactNode } | null>(null)
+  // Whether the text now showing came in instantly. State, so a later re-render can't add the
+  // entrance to an element that is already up.
+  const [quiet, setQuiet] = useState(false)
   // What the last render showed, so the outgoing copy has its final numbers, not its first ones.
   const last = useRef(children)
   useEffect(() => {
@@ -199,7 +205,8 @@ export function Swap({
   })
   if (shown !== k) {
     setShown(k)
-    setOld({ k: shown, node: last.current })
+    setQuiet(instant)
+    setOld(instant ? null : { k: shown, node: last.current })
   }
   const Tag = as as 'span'
   const cell = as === 'g' ? '' : '[grid-area:1/1]'
@@ -217,7 +224,7 @@ export function Swap({
       )}
       <Tag
         key={`in-${k}`}
-        className={`${cell} animate-[text-in_240ms_var(--ease-out)] motion-reduce:animate-none`}
+        className={`${cell} ${quiet ? '' : 'animate-[text-in_240ms_var(--ease-out)] motion-reduce:animate-none'}`}
       >
         {children}
       </Tag>
@@ -323,6 +330,11 @@ export function Track({
   const buttons = useRef<HTMLButtonElement[]>([])
   const row = useRef<HTMLDivElement>(null)
   const [hover, setHover] = useState<number | null>(null)
+  // Like a row of tooltips: once a step's name is up, moving to the next one swaps it at once.
+  const naming = useRef(false)
+  useEffect(() => {
+    naming.current = hover !== null
+  })
   const drag = useRef<{ x: number; resume: boolean; moving: boolean } | null>(null)
 
   const seekAt = (x: number) => {
@@ -361,7 +373,7 @@ export function Track({
         aria-keyshortcuts="K"
         title={playing ? 'Pause (K)' : 'Play (K)'}
         onClick={onToggle}
-        className="grid size-7 flex-none cursor-pointer place-items-center rounded-full border border-edge bg-card text-fg transition-[background-color,scale] duration-150 ease-out hover:bg-hover active:scale-90 motion-reduce:transition-none"
+        className="grid size-7 flex-none cursor-pointer place-items-center rounded-full border border-edge bg-card text-fg transition-[background-color,scale] duration-150 ease-out hover:bg-hover active:scale-95 motion-reduce:transition-none"
       >
         {/* Both icons stay mounted in one cell, so the swap is a blur-and-scale crossfade. */}
         <Pause size={12} aria-hidden className={`${iconSwap} ${playing ? '' : iconOff}`} />
@@ -374,7 +386,7 @@ export function Track({
         aria-label={`Playback speed ${speed}×`}
         title="Playback speed"
         onClick={() => onSpeed(SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length])}
-        className="w-[4ch] flex-none self-stretch cursor-pointer text-left font-mono text-meta text-subtle tabular-nums transition-[color,scale] duration-150 ease-out hover:text-fg active:scale-90 motion-reduce:transition-none"
+        className="w-[4ch] flex-none self-stretch cursor-pointer text-left font-mono text-meta text-subtle tabular-nums transition-[color,scale] duration-150 ease-out hover:text-fg active:scale-95 motion-reduce:transition-none"
       >
         {/* A crossfade, not NumberFlow: speed is a choice, so it shouldn't roll through 1.3, 1.4… */}
         <Swap k={speed}>{speed}×</Swap>
@@ -441,6 +453,7 @@ export function Track({
           its digits roll from step to step instead of the whole label cross-fading. */}
       <Swap
         k={hover === null ? 'n' : `h${hover}`}
+        instant={hover !== null && naming.current}
         className="w-[10ch] flex-none whitespace-nowrap text-right font-mono text-meta text-subtle tabular-nums"
       >
         {hover === null ? (

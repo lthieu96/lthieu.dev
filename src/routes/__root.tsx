@@ -1,6 +1,13 @@
 import geist from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url'
-import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
+import {
+  createRootRoute,
+  HeadContent,
+  Outlet,
+  Scripts,
+  useRouter,
+  useRouterState,
+} from '@tanstack/react-router'
+import { type ReactNode, useEffect, useLayoutEffect, useRef } from 'react'
 import { seo } from '@/lib/seo'
 import { DEFAULT_THEME, themeScript } from '@/lib/theme'
 import appCss from '@/styles/app.css?url'
@@ -22,9 +29,37 @@ export const Route = createRootRoute({
     ],
   }),
   shellComponent: Document,
-  component: Outlet,
+  component: Root,
   notFoundComponent: NotFound,
 })
+
+/**
+ * Back and Forward return to a page already seen, often scrolled halfway down: its blocks are
+ * simply there under the crossfade instead of rising one by one again (.enter in app.css).
+ */
+function Root() {
+  const router = useRouter()
+  // Changes in the same commit that mounts the new page, so the layout effect below sees it.
+  const page = useRouterState({ select: (s) => s.matches.at(-1)?.id })
+  const traversal = useRef(false)
+  useEffect(
+    () =>
+      router.history.subscribe(({ action }) => {
+        traversal.current =
+          action.type === 'BACK' || action.type === 'FORWARD' || action.type === 'GO'
+      }),
+    [router],
+  )
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs once per page, after it mounts
+  useLayoutEffect(() => {
+    if (!traversal.current) return
+    for (const a of document.getAnimations()) {
+      // Finished, not removed: a finished CSS animation stays put when the next push re-renders.
+      if (a instanceof CSSAnimation && a.animationName === 'enter') a.finish()
+    }
+  }, [page])
+  return <Outlet />
+}
 
 function Document({ children }: { children: ReactNode }) {
   return (

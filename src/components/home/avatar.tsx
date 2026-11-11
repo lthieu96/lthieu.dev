@@ -352,7 +352,7 @@ export function Avatar() {
         aria-label="Make it rain"
         aria-pressed={down}
         onClick={() => go(!down)}
-        className="block flex-none cursor-pointer rounded-full transition-[scale] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 active:scale-92"
+        className="block flex-none cursor-pointer rounded-full transition-[scale] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 active:scale-95"
       >
         <img
           src="/img/avatar.webp"

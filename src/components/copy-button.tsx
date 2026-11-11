@@ -1,5 +1,5 @@
 import { Check, Copy } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 /** An icon button that copies `text()` and turns into a check for 1.5s. */
 export function CopyButton({
@@ -13,11 +13,15 @@ export function CopyButton({
   className?: string
 }) {
   const [copied, setCopied] = useState(false)
+  const timer = useRef<number>(undefined)
+  useEffect(() => () => clearTimeout(timer.current), [])
 
   const copy = async () => {
     await navigator.clipboard.writeText(text())
     setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
+    // From the last click, so a second copy keeps the check up for the full 1.5s.
+    clearTimeout(timer.current)
+    timer.current = window.setTimeout(() => setCopied(false), 1500)
   }
 
   return (
@@ -32,12 +36,12 @@ export function CopyButton({
         <Copy
           size={13}
           aria-hidden
-          className={`col-start-1 row-start-1 transition-[opacity,scale,filter] duration-200 ease-(--ease-out) ${copied ? 'scale-50 opacity-0 blur-[2px]' : ''}`}
+          className={`col-start-1 row-start-1 transition-[opacity,scale,filter] duration-200 ease-(--ease-out) ${copied ? 'scale-50 opacity-0 blur-[2px] motion-reduce:scale-100' : ''}`}
         />
         <Check
           size={13}
           aria-hidden
-          className={`col-start-1 row-start-1 transition-[opacity,scale,filter] duration-200 ease-(--ease-out) ${copied ? '' : 'scale-50 opacity-0 blur-[2px]'}`}
+          className={`col-start-1 row-start-1 transition-[opacity,scale,filter] duration-200 ease-(--ease-out) ${copied ? '' : 'scale-50 opacity-0 blur-[2px] motion-reduce:scale-100'}`}
         />
       </button>
       <span role="status" className="sr-only">
