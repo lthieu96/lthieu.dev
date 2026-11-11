@@ -26,7 +26,9 @@ function CaseStudyPage() {
   const next = nextCaseStudy(slug)
 
   return (
-    <article className="pb-24">
+    // Keyed by slug: "Next project" stays on this route, so without it React kept the old page's
+    // blocks (their entrance already played) and its media and figure state.
+    <article key={slug} className="pb-24">
       <Page className="pb-14">
         <TopBar back="/" label="Work" />
         <header className="mt-20">

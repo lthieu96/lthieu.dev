@@ -393,10 +393,11 @@ export function Track({
       </button>
       {/* A press that moves more than 4px scrubs (pausing while it does); a plain click still jumps.
           pan-y keeps the page scrolling on phones. The row fills the controls' height plus 8px above
-          and below, gaps included, so a hand drifting off the 2px line doesn't flip to an arrow. */}
+          and below, so a hand drifting off the 2px line doesn't flip to an arrow. The 4px between
+          lines is padding inside each button, not a gap: a tap anywhere on the row lands on a step. */}
       <div
         ref={row}
-        className="-my-2 flex min-w-0 flex-1 cursor-pointer touch-pan-y gap-1 self-stretch"
+        className="-mx-0.5 -my-2 flex min-w-0 flex-1 cursor-pointer touch-pan-y self-stretch"
         onPointerLeave={() => setHover(null)}
         onPointerDown={(e) => {
           drag.current = { x: e.clientX, resume: playing, moving: false }
@@ -434,7 +435,7 @@ export function Track({
             onPointerEnter={() => setHover(i)}
             onFocus={() => setHover(i)}
             onBlur={() => setHover(null)}
-            className="group min-w-0 flex-1 cursor-pointer py-2.5"
+            className="group min-w-0 flex-1 cursor-pointer px-0.5 py-2.5"
           >
             <span
               className={`block h-0.5 overflow-hidden rounded-full transition-colors duration-150 ${marked.has(i) ? 'bg-accent/35' : 'bg-edge group-hover:bg-subtle/40'}`}
