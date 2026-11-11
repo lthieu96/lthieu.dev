@@ -96,16 +96,17 @@ function Home() {
           <p className="text-list text-muted">
             Want to build something, or just say hi? Email me at{' '}
             {/* The copy button floats above the address on hover or focus, so it never sits in
-                the sentence. The pb-1.5 strip keeps the hover alive on the way up to it. */}
+                the sentence. The pb-1.5 strip keeps the hover alive on the way up to it. Touch
+                screens can't hover, so there it sits inline after the address. */}
             <span className="group/email relative">
               <a href={`mailto:${site.email}`} className={strong}>
                 {site.email}
               </a>
-              <span className="pointer-events-none absolute right-0 bottom-full pb-1.5 opacity-0 transition-opacity duration-150 ease-(--ease-out) group-focus-within/email:pointer-events-auto group-focus-within/email:opacity-100 group-hover/email:pointer-events-auto group-hover/email:opacity-100">
+              <span className="pointer-events-none absolute right-0 bottom-full pb-1.5 opacity-0 transition-opacity duration-150 ease-(--ease-out) group-focus-within/email:pointer-events-auto group-focus-within/email:opacity-100 group-hover/email:pointer-events-auto group-hover/email:opacity-100 pointer-coarse:pointer-events-auto pointer-coarse:static pointer-coarse:pb-0 pointer-coarse:pl-1 pointer-coarse:opacity-100">
                 <CopyButton
                   text={() => site.email}
                   label="Copy email address"
-                  className="grid size-7 rounded-md border border-line bg-card"
+                  className="grid size-7 rounded-md border border-line bg-card pointer-coarse:-my-1 pointer-coarse:inline-grid pointer-coarse:size-6 pointer-coarse:align-middle"
                 />
               </span>
             </span>

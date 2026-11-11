@@ -86,7 +86,7 @@ function BuildCredits() {
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner side="top" align="start" sideOffset={10} collisionPadding={16}>
-          <Popover.Popup className="flex max-h-[min(70vh,520px)] w-[360px] max-w-(--available-width) origin-(--transform-origin) flex-col gap-4 overflow-y-auto rounded-[14px] border border-edge bg-card p-4 shadow-[0_18px_48px_var(--color-card-shadow)] outline-none transition-[opacity,scale] duration-150 ease-(--ease-out) [scrollbar-width:thin] data-ending-style:scale-[0.97] data-ending-style:opacity-0 data-starting-style:scale-[0.97] data-starting-style:opacity-0">
+          <Popover.Popup className="flex max-h-[min(70dvh,520px)] w-[360px] max-w-(--available-width) origin-(--transform-origin) flex-col gap-4 overflow-y-auto overscroll-contain rounded-[14px] border border-edge bg-card p-4 shadow-[0_18px_48px_var(--color-card-shadow)] outline-none transition-[opacity,scale] duration-150 ease-(--ease-out) [scrollbar-width:thin] data-ending-style:scale-[0.97] data-ending-style:opacity-0 data-starting-style:scale-[0.97] data-starting-style:opacity-0">
             <div className="flex flex-col gap-1">
               <Popover.Title className="text-ui font-medium text-fg">
                 How this site was made

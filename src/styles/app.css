@@ -149,6 +149,28 @@
     scrollbar-width: thin;
     scrollbar-color: color-mix(in srgb, var(--color-fg) 20%, transparent) transparent;
     scrollbar-gutter: stable;
+    /* No grey flash on tap: buttons have their own :active, links get the one below. */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Touch only: there the tap highlight was a link's only feedback; with a mouse, hover is. */
+  @media (hover: none) {
+    a:active {
+      opacity: 0.7;
+    }
+  }
+
+  /* Phones: click fires without the double-tap-zoom wait. */
+  a,
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  /* A long press on a control shouldn't select its label. Links stay selectable: they're content. */
+  button {
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   h1,

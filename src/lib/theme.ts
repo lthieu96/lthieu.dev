@@ -8,8 +8,14 @@ const root = () => document.documentElement
 /** Light unless the visitor picked dark. The prerendered <html> already says light. */
 export const DEFAULT_THEME: Theme = 'light'
 
-/** Runs inline in <head> before first paint and applies a saved theme and motion choice, if any. */
-export const themeScript = `(function(){try{var s=localStorage.getItem('${KEY}');if(s==='light'||s==='dark')document.documentElement.dataset.theme=s;if(localStorage.getItem('motion'))document.documentElement.setAttribute('data-motion','')}catch(e){}})()`
+/** Browser chrome / status bar colour per theme: --color-bg in app.css. */
+const THEME_COLOR: Record<Theme, string> = { light: '#fcfcfb', dark: '#111111' }
+
+/**
+ * Runs inline in <head> before first paint and applies a saved theme and motion choice, if any. It
+ * also adds the theme-color meta, so the status bar matches a saved dark theme from the first frame.
+ */
+export const themeScript = `(function(){var d=document.documentElement;try{var s=localStorage.getItem('${KEY}');if(s==='light'||s==='dark')d.dataset.theme=s;if(localStorage.getItem('motion'))d.setAttribute('data-motion','')}catch(e){}var m=document.createElement('meta');m.name='theme-color';m.content=${JSON.stringify(THEME_COLOR)}[d.dataset.theme];document.head.appendChild(m)})()`
 
 /** The theme on <html>. */
 export function useTheme(): Theme {
@@ -29,6 +35,7 @@ export function setTheme(theme: Theme) {
   localStorage.setItem(KEY, theme)
   const apply = () => {
     root().dataset.theme = theme
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme])
   }
   const reduced =
     matchMedia('(prefers-reduced-motion: reduce)').matches && !root().hasAttribute('data-motion')
