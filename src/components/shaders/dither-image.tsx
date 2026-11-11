@@ -1,5 +1,5 @@
 import { type PaperShaderElement, ShaderMount } from '@paper-design/shaders-react'
-import { type RefObject, useEffect, useMemo, useRef } from 'react'
+import { type RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import type { DitherTone } from '@/data/projects'
 import { useAfterPaint } from '@/lib/after-paint'
 import { useTheme } from '@/lib/theme'
@@ -30,7 +30,7 @@ type Props = DitherTone & {
 
 /** An image shown as a 4-tone dither (or in colour) that resolves into colour or clears when `revealed`. */
 function Shader({
-  src,
+  image,
   alt,
   revealed,
   clear,
@@ -40,7 +40,7 @@ function Shader({
   contrast = 1.1,
   gamma = 0.6,
   className,
-}: Props) {
+}: Omit<Props, 'src'> & { image: HTMLImageElement }) {
   const ref = useRef<PaperShaderElement>(null)
   const progress = useRef(0)
   const reduced = useReducedMotion()
@@ -50,9 +50,10 @@ function Shader({
   // `invert` is written for the dark theme; light mode flips it so screenshots keep their polarity.
   const uniforms = useMemo(
     () => ({
-      u_image: src,
+      u_image: image,
       // Must be present at mount for the uniform to be registered; tweened below, not via props.
-      u_reveal: 0,
+      // Starts from the current progress, so a theme swap (which re-sends every uniform) keeps it.
+      u_reveal: progress.current,
       u_clear: clear ? 1 : 0,
       u_plain: plain ? 1 : 0,
       u_radial: pointer ? 1 : 0,
@@ -66,16 +67,22 @@ function Shader({
       u_shadow: light ? [0.227, 0.29, 0.345] : [0.082, 0.082, 0.082],
       u_light: light ? [0.925, 0.922, 0.91] : [0.663, 0.737, 0.796],
     }),
-    [src, clear, plain, pointer, contrast, gamma, invert, light],
+    [image, clear, plain, pointer, contrast, gamma, invert, light],
   )
 
   // u_reveal is tweened on the mount directly so React never re-renders mid-animation.
   useEffect(() => {
     const target = revealed ? 1 : 0
-    const mount = ref.current?.paperShaderMount
+    // ShaderMount is created asynchronously, often after this effect has started (a touch screen
+    // reveals on load), so look it up on every write rather than once. It then re-sends `uniforms`
+    // as they are, so write into that object too, or it puts back the value from before.
+    const push = (u: { u_reveal: number } | { u_from: number[]; u_maxd: number }) => {
+      Object.assign(uniforms, u)
+      ref.current?.paperShaderMount?.setUniforms(u)
+    }
     const set = (v: number) => {
       progress.current = v
-      mount?.setUniforms({ u_reveal: v })
+      push({ u_reveal: v })
     }
     // Open from the pointer; closing keeps the same centre, so it shrinks back to where it began.
     const el = ref.current
@@ -90,7 +97,7 @@ function Shader({
       const maxd = Math.max(
         ...[0, 1].flatMap((x) => [0, 1].map((y) => Math.hypot((x - fx) * aspect, y - fy))),
       )
-      mount?.setUniforms({ u_from: [fx, fy], u_maxd: maxd })
+      push({ u_from: [fx, fy], u_maxd: maxd })
     }
     if (reduced) return set(target)
     const from = progress.current
@@ -103,7 +110,7 @@ function Shader({
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [revealed, reduced, pointer])
+  }, [revealed, reduced, pointer, uniforms])
 
   return (
     <ShaderMount
@@ -119,12 +126,28 @@ function Shader({
 
 /**
  * Empty for the first frame, so a page transition isn't held back by WebGL setup (see
- * useAfterPaint); the shader takes over from the next frame.
+ * useAfterPaint), and until the image has loaded; the shader takes over from then.
  */
 export function DitherImage(props: Props) {
   const ready = useAfterPaint()
-  return ready ? (
-    <Shader {...props} />
+  // Given a URL, ShaderMount fetches it again each time it re-sends the uniforms. On a slow network
+  // that re-send landed after the reveal had finished and put back the value from when it began.
+  // A loaded element only needs a decode, which is immediate.
+  const [image, setImage] = useState<HTMLImageElement>()
+  useEffect(() => {
+    let live = true
+    const img = new Image()
+    img.src = props.src
+    img.decode().then(
+      () => live && setImage(img),
+      () => console.error(`DitherImage: could not load ${props.src}`),
+    )
+    return () => {
+      live = false
+    }
+  }, [props.src])
+  return ready && image ? (
+    <Shader {...props} image={image} />
   ) : (
     <div role="img" aria-label={props.alt} className={props.className} />
   )

@@ -140,12 +140,14 @@ function Resume() {
         className={`enter flex w-[794px] min-h-[1123px] flex-col gap-[22px] bg-white px-16 py-14 font-resume tracking-[-0.02em] text-[#1a1a1a] ${sheet} narrow-screen:w-full narrow-screen:px-6`}
         style={delay(1)}
       >
-        <header className="flex items-end justify-between">
+        {/* On phones the contacts can't share a row with the name, so they go under it, as a
+            wrapping line spaced far enough apart to tap. */}
+        <header className="flex items-end justify-between max-sm:flex-col max-sm:items-start max-sm:gap-3">
           <div className="flex flex-col gap-0.5">
             <h1 className="text-[25px]/[1.15] font-semibold">{resume.name}</h1>
             <p className="text-[11.7px]/[1.5] text-[#555]">{resume.headline}</p>
           </div>
-          <ul className="flex flex-col items-end gap-px text-[10.7px]/[1.5] text-[#555]">
+          <ul className="flex flex-col items-end gap-px text-[10.7px]/[1.5] text-[#555] max-sm:flex-row max-sm:flex-wrap max-sm:gap-x-4 max-sm:gap-y-2.5">
             {resume.contact.map((c) => (
               <li key={c.href}>
                 <a

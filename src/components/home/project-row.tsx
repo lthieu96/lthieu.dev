@@ -112,10 +112,11 @@ function ProjectRow({
         />
       </span>
       <div className="min-w-0 flex-1">
-        {/* The year shares the title's baseline. */}
-        <div className="flex items-baseline justify-between gap-4">
+        {/* The year shares the title's baseline. On a 320px phone a long name leaves it no room,
+            so it wraps under the name, still on the right, instead of running off the row. */}
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4">
           <span className="text-list text-fg">{project.name}</span>
-          <span className="shrink-0 text-ui text-subtle tabular-nums">{project.years}</span>
+          <span className="ml-auto shrink-0 text-ui text-subtle tabular-nums">{project.years}</span>
         </div>
         <p className="text-ui text-muted">{project.summary}</p>
         {/* Tags, and under the year the arrow that says the row opens a case study. */}

@@ -1,3 +1,4 @@
+import geist from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url'
 import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { seo } from '@/lib/seo'
@@ -15,6 +16,9 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: 'stylesheet', href: appCss },
+      // The body font, fetched alongside the CSS instead of after it: on 3G that was a second
+      // late, and the text reflowed when it swapped in.
+      { rel: 'preload', href: geist, as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' },
       { rel: 'icon', href: '/favicon.ico' },
     ],
   }),

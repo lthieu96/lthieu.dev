@@ -367,13 +367,14 @@ export function Track({
         <Pause size={12} aria-hidden className={`${iconSwap} ${playing ? '' : iconOff}`} />
         <Play size={12} aria-hidden className={`${iconSwap} ${playing ? iconOff : ''}`} />
       </button>
-      {/* Fixed width, so going from 2× to 1.5× never resizes the segments. */}
+      {/* Fixed width, so going from 2× to 1.5× never resizes the segments. Full row height, so it's
+          as easy to tap as the play button. */}
       <button
         type="button"
         aria-label={`Playback speed ${speed}×`}
         title="Playback speed"
         onClick={() => onSpeed(SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length])}
-        className="w-[4ch] flex-none cursor-pointer text-left font-mono text-meta text-subtle tabular-nums transition-[color,scale] duration-150 ease-out hover:text-fg active:scale-90 motion-reduce:transition-none"
+        className="w-[4ch] flex-none self-stretch cursor-pointer text-left font-mono text-meta text-subtle tabular-nums transition-[color,scale] duration-150 ease-out hover:text-fg active:scale-90 motion-reduce:transition-none"
       >
         {/* A crossfade, not NumberFlow: speed is a choice, so it shouldn't roll through 1.3, 1.4… */}
         <Swap k={speed}>{speed}×</Swap>
